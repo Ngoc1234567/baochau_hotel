@@ -1,0 +1,14 @@
+# Keep local database, backups and Git metadata private.
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule (^|/)\. - [F,L]
+RewriteRule \.(ps1|md|log|sql|zip)$ - [F,L,NC]
+
+# BEGIN WordPress
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
+# END WordPress
+</IfModule>
