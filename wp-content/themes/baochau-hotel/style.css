@@ -1,6 +1,6 @@
 /*
 Theme Name: Bảo Châu Hotel
-Version: 1.1.0
+Version: 1.1.1
 Requires at least: 6.5
 Requires PHP: 8.0
 Description: Giao diện khách sạn Việt Nam, kết hợp Bảo Châu Booking.
@@ -201,3 +201,5 @@ input[type=checkbox]{width:24px;height:24px;vertical-align:middle;margin:0 10px 
   .reservation-guide span{font-size:16px}
   .booking-step{font-size:11px;letter-spacing:1px}
 }
+
+.card-actions>a:only-child{width:100%;grid-column:1/-1;min-height:54px}
