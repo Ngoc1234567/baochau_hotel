@@ -1,6 +1,6 @@
 /*
 Theme Name: Bảo Châu Hotel
-Version: 1.0.1
+Version: 1.0.2
 Requires at least: 6.5
 Requires PHP: 8.0
 Description: Giao diện khách sạn Việt Nam, kết hợp Bảo Châu Booking.
@@ -10,3 +10,83 @@ License: GPL-2.0-or-later
 
 /* Warm gold accents retain readable contrast on light and dark surfaces. */
 .contact-copy .eyebrow{color:#e5c789}.room-card .eyebrow{color:var(--gold-text)}.nav a:not(.button):hover,.card-actions>a:not(.button):hover{color:var(--gold-text)}input[type=checkbox]{accent-color:var(--gold-text)}::selection{background:#e5c789;color:var(--ink)}
+
+/* Comfortable touch controls and clear gold/brown hierarchy. */
+button,.button{min-height:52px;border-radius:8px;font-size:16px;font-weight:700;line-height:1.4;text-align:center;touch-action:manipulation;transition:background-color .15s ease}
+button:active,.button:active{background:#e5c789}
+label{font-size:15px;line-height:1.5}
+input:not([type=checkbox]),select,textarea{font-size:16px;min-height:54px;min-width:0;border-color:#b5a390;border-radius:6px;background:var(--white);padding:12px;color:var(--ink)}
+input[type=checkbox]{width:24px;height:24px;vertical-align:middle;margin:0 10px 0 0;flex-shrink:0}
+.guest-form .consent{display:block;min-height:48px;padding:12px 0;line-height:1.8}
+.guest-form .consent a{display:inline-block;padding:4px 0}
+.guest-form button{width:100%;min-height:56px}
+.booking-search{border-radius:12px;border-top:3px solid var(--gold)}
+.booking-search>*,.checkout>*,.room-grid>*,.gallery>*{min-width:0}
+.room-card{border-radius:12px}
+.room-card>img,.room-card>a>img{border-radius:11px 11px 0 0}
+.card-actions{gap:12px}
+.card-actions>a{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:10px 14px;text-align:center;border-radius:6px;font-size:15px;font-weight:600}
+.card-actions>a:not(.button){border:1px solid #b5a390;text-decoration:none}
+.card-actions>a:not(.button):hover{background:var(--cream)}
+.nav a{display:inline-flex;align-items:center;min-height:48px}
+.intro-note>a,.footer-top a,.booking-flow>.notice+a{display:inline-flex;align-items:center;min-height:48px}
+.checkout summary{padding:12px 0;min-height:48px;cursor:pointer;font-weight:600}
+.notice,.receipt,.checkout section{border-radius:8px}
+.receipt pre,.notice,.contact-copy p,.detail-body p{overflow-wrap:anywhere}
+.guest-form p,.room-card p,.service p{font-size:16px}
+.price small,.fineprint{font-size:14px}
+.page-main article>h1{font:clamp(32px,5vw,48px)/1.2 Georgia,serif}
+
+@media(max-width:980px){
+  .header-inner{min-height:80px;flex-wrap:wrap;gap:12px;padding:12px 0}
+  .menu-toggle{display:inline-flex;min-width:88px;min-height:48px;padding:10px 16px}
+  .nav{display:none;width:100%;flex-direction:column;align-items:stretch;gap:8px;padding:8px 0;max-height:calc(100dvh - 110px);overflow-y:auto;overscroll-behavior:contain}
+  .nav.open{display:flex}
+  .nav ul{display:flex;flex-direction:column;gap:8px;margin:0}
+  .nav li a{width:100%}
+  .nav a:not(.button){font-size:16px;padding:12px 16px;border-radius:6px;background:var(--cream)}
+  .nav .button{width:100%;min-height:54px}
+  .booking-search{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+  .booking-search button{min-height:54px;font-size:16px}
+  .room-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+  .checkout{gap:28px}
+}
+@media(max-width:680px){
+  html{scroll-padding-top:100px}
+  .wrap{width:calc(100% - 32px)}
+  .brand{gap:8px}
+  .brand strong{font-size:18px;letter-spacing:2px}
+  .brand small{font-size:9px;letter-spacing:3px}
+  .brand-symbol{font-size:28px;padding:4px 10px}
+  .custom-logo{max-width:170px;height:auto;max-height:48px}
+  .hero{min-height:0}
+  .hero-content{padding:48px 0 76px}
+  .hero h1{font-size:clamp(34px,9vw,46px);line-height:1.18;margin:18px 0}
+  .hero p{font-size:16px}
+  .hero .eyebrow{font-size:11px;letter-spacing:2px}
+  .hero-links{flex-direction:column;align-items:stretch;gap:16px;margin-top:24px}
+  .hero-links .button{width:100%;min-height:56px}
+  .demo-tag{align-self:flex-start}
+  .search-shell{margin-top:-24px}
+  .booking-search{grid-template-columns:minmax(0,1fr);gap:18px;padding:22px 18px}
+  .booking-search label,.guest-form label{font-size:16px}
+  .booking-search button{width:100%;min-height:56px;margin-top:4px;font-size:17px}
+  .room-grid,.checkout{grid-template-columns:minmax(0,1fr)}
+  .room-card>img,.room-card>a>img{height:auto;aspect-ratio:4/3}
+  .card-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .card-actions>a,.card-actions .button{width:100%;min-height:54px;padding:12px 8px;font-size:16px}
+  .section-head h2,h2{font-size:32px;line-height:1.25}
+  .service-grid{grid-template-columns:minmax(0,1fr);gap:12px}
+  .service{padding:20px 0}
+  .service h3{font-size:26px}
+  .contact-copy{padding:32px 20px}
+  .contact-copy>.button,.detail-body>.button{width:100%;min-height:56px}
+  .page-main{padding:32px 0 48px}
+  .checkout section{padding:24px 18px}
+  .guest-form label{margin-bottom:20px}
+  .notice{padding:16px;line-height:1.7}
+  .receipt{padding:22px 16px}
+  .receipt pre{font-size:16px;line-height:1.85}
+  .footer-top a{padding:8px 0}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}button,.button{transition:none}}

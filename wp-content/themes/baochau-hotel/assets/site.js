@@ -1,8 +1,27 @@
-document.querySelector('.menu-toggle')?.addEventListener('click', function () {
-  const open = this.getAttribute('aria-expanded') !== 'true';
-  this.setAttribute('aria-expanded', String(open));
-  document.querySelector('#site-nav')?.classList.toggle('open', open);
+const menuToggle = document.querySelector('.menu-toggle');
+const navigation = document.querySelector('#site-nav');
+function setMenuOpen(open) {
+  menuToggle?.setAttribute('aria-expanded', String(open));
+  menuToggle?.setAttribute('aria-label', open ? 'Đóng menu điều hướng' : 'Mở menu điều hướng');
+  if (menuToggle) menuToggle.textContent = open ? 'Đóng ×' : 'Menu ☰';
+  navigation?.classList.toggle('open', open);
+}
+menuToggle?.addEventListener('click', () => {
+  setMenuOpen(menuToggle.getAttribute('aria-expanded') !== 'true');
 });
+navigation?.addEventListener('click', event => {
+  if (event.target.closest('a')) setMenuOpen(false);
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && menuToggle?.getAttribute('aria-expanded') === 'true') {
+    setMenuOpen(false);
+    menuToggle.focus();
+  }
+});
+document.addEventListener('click', event => {
+  if (!event.target.closest('.site-header')) setMenuOpen(false);
+});
+window.matchMedia('(max-width:980px)').addEventListener('change', () => setMenuOpen(false));
 document.querySelectorAll('.booking-search').forEach(form => {
   const checkin = form.querySelector('[name=in]');
   const checkout = form.querySelector('[name=out]');
