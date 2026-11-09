@@ -8,5 +8,5 @@
 <button class="menu-toggle" type="button" aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="site-nav">Menu ☰</button>
 <nav class="nav" id="site-nav" aria-label="Menu chính">
 <?php if (has_nav_menu('primary')): wp_nav_menu(['theme_location'=>'primary','container'=>false]); else: ?>
-<a href="<?php echo esc_url(home_url('/#gioi-thieu')); ?>">Câu chuyện</a><a href="<?php echo esc_url(home_url('/#phong')); ?>">Phòng nghỉ</a><a href="<?php echo esc_url(home_url('/#tien-ich')); ?>">Tiện ích</a><a href="<?php echo esc_url(home_url('/#lien-he')); ?>">Liên hệ</a>
+<?php foreach (['trang-chu'=>'Trang chủ','gioi-thieu'=>'Giới thiệu','phong-nghi'=>'Phòng nghỉ','tien-ich'=>'Tiện ích','lien-he'=>'Liên hệ'] as $slug=>$label): ?><a href="<?php echo esc_url(bch_page_url($slug)); ?>" <?php if (is_page($slug) || ($slug==='trang-chu' && is_front_page())) echo 'aria-current="page"'; ?>><?php echo esc_html($label); ?></a><?php endforeach; ?>
 <?php endif; ?><a class="button" href="<?php echo esc_url(bch_theme_booking()); ?>">Đặt phòng ↗</a></nav></div></header>

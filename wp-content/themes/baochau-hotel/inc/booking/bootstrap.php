@@ -1,21 +1,11 @@
 <?php
-/**
- * Plugin Name: Bảo Châu Booking
- * Description: Đặt phòng trực tiếp, cọc chuyển khoản 30%, quản lý tồn và hết hạn giữ chỗ.
- * Version: 1.0.0
- * Requires PHP: 8.0
- * Requires at least: 6.5
- * License: GPL-2.0-or-later
- */
 defined('ABSPATH') || exit;
-require_once __DIR__ . '/includes/domain.php';
-require_once __DIR__ . '/includes/store.php';
-require_once __DIR__ . '/includes/admin.php';
-require_once __DIR__ . '/includes/public.php';
-register_activation_hook(__FILE__, 'bch_install');
-register_deactivation_hook(__FILE__, function () { wp_clear_scheduled_hook('bch_expire'); });
+require_once __DIR__ . '/domain.php';
+require_once __DIR__ . '/store.php';
+require_once __DIR__ . '/admin.php';
+require_once __DIR__ . '/public.php';
 add_filter('cron_schedules', function ($s) { $s['bch_minute'] = ['interval'=>60,'display'=>'Mỗi phút']; return $s; });
-add_action('plugins_loaded', function () {
+add_action('init', function () {
     if (get_option('bch_schema') !== '1') bch_install();
     if (!wp_next_scheduled('bch_expire')) wp_schedule_event(time(), 'bch_minute', 'bch_expire');
 });

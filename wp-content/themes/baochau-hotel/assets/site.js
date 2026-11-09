@@ -1,4 +1,19 @@
 const menuToggle = document.querySelector('.menu-toggle');
+document.querySelectorAll('[data-room-gallery]').forEach(gallery => {
+  const main = gallery.querySelector('[data-gallery-main]');
+  const full = gallery.querySelector('.room-photo-large');
+  const thumbnails = [...gallery.querySelectorAll('[data-gallery-thumb]')];
+  thumbnails.forEach((thumb, index) => {
+    thumb.addEventListener('click', event => {
+      event.preventDefault();
+      main.src = thumb.href;
+      main.alt = thumb.querySelector('img').alt;
+      full.href = thumb.href;
+      thumbnails.forEach(item => item.setAttribute('aria-current', String(item === thumb)));
+      gallery.querySelector('.room-gallery-status').textContent = `Ảnh ${index + 1} / ${thumbnails.length}`;
+    });
+  });
+});
 const navigation = document.querySelector('#site-nav');
 function setMenuOpen(open) {
   menuToggle?.setAttribute('aria-expanded', String(open));
@@ -22,7 +37,7 @@ document.addEventListener('click', event => {
   if (!event.target.closest('.site-header')) setMenuOpen(false);
 });
 window.matchMedia('(max-width:980px)').addEventListener('change', () => setMenuOpen(false));
-document.querySelectorAll('.booking-search').forEach(form => {
+document.querySelectorAll('.booking-search, .reservation-form').forEach(form => {
   const checkin = form.querySelector('[name=in]');
   const checkout = form.querySelector('[name=out]');
   const update = () => {

@@ -1,0 +1,3 @@
+<?php /* Template Name: Bảo Châu — Liên hệ */
+get_header(); ?>
+<main id="main" class="wrap page-main content-page"><?php while (have_posts()): the_post(); bch_page_heading('KẾT NỐI VỚI BẢO CHÂU'); ?><div class="contact-page-layout"><div class="editor-content"><?php the_content(); ?></div><aside class="reservation-aside"><h2>Bạn đã chọn được ngày nghỉ?</h2><p>Kiểm tra phòng trống và tổng tiền trước khi giữ chỗ. Khách sạn xác nhận sau khi đối chiếu tiền cọc.</p><a class="button" href="<?php echo esc_url(bch_theme_booking()); ?>">Đặt phòng →</a><p><a href="<?php echo esc_url(get_permalink(get_option('bch_policy_page'))); ?>">Chính sách đặt cọc</a></p></aside></div><?php endwhile; ?></main><?php get_footer(); ?>

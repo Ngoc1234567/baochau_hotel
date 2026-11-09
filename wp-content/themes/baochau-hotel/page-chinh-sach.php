@@ -1,0 +1,3 @@
+<?php /* Template Name: Bảo Châu — Chính sách đặt cọc */
+get_header(); ?>
+<main id="main" class="wrap page-main content-page"><?php while (have_posts()): the_post(); bch_page_heading('THÔNG TIN ĐẶT PHÒNG'); ?><div class="editor-content"><p><?php echo esc_html(BCH_POLICY); ?></p><p><?php echo nl2br(esc_html(bch_settings()['policy'])); ?></p><p>Thời hạn giữ chỗ: <?php echo esc_html(bch_settings()['hours']); ?> giờ. Nếu đã chuyển tiền nhưng chưa được xác nhận, vui lòng liên hệ lễ tân.</p><?php if (!has_shortcode(get_the_content(),'baochau_policy')) the_content(); ?></div><?php endwhile; ?></main><?php get_footer(); ?>
