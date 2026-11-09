@@ -1,6 +1,6 @@
 /*
 Theme Name: Bảo Châu Hotel
-Version: 1.1.1
+Version: 1.2.0
 Requires at least: 6.5
 Requires PHP: 8.0
 Description: Giao diện khách sạn Việt Nam, kết hợp Bảo Châu Booking.
@@ -92,6 +92,16 @@ input[type=checkbox]{width:24px;height:24px;vertical-align:middle;margin:0 10px 
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}button,.button{transition:none}}
 
 /* Reservation page: paired fields, a distinct help panel, and one clear action. */
+.acf-page-banner{display:block;width:100%;max-height:420px;object-fit:cover;border-radius:12px;margin-bottom:32px}
+.acf-service-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-bottom:32px}
+.acf-service-grid:empty{display:none}
+.acf-service-card{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--cream)}
+.acf-service-card>img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.acf-service-card>div{padding:24px}.acf-service-card h2{font-size:26px}.acf-service-card p{color:var(--muted)}
+.acf-contact-details{margin:24px 0}.acf-contact-details dt{font-weight:600}.acf-contact-details dd{margin:0 0 16px;overflow-wrap:anywhere}
+.acf-contact-details a{display:inline-flex;align-items:center;min-height:48px}
+@media(max-width:980px){.acf-service-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.acf-service-grid{grid-template-columns:minmax(0,1fr)}.acf-page-banner{max-height:280px}}
 .content-page-heading{padding:20px 0 32px;margin-bottom:32px;border-bottom:1px solid var(--line)}
 .content-page-heading h1{font:clamp(36px,5vw,60px)/1.2 var(--font-heading);margin:12px 0}
 .editor-content{font-size:17px;line-height:1.85;overflow-wrap:anywhere}
@@ -203,3 +213,55 @@ input[type=checkbox]{width:24px;height:24px;vertical-align:middle;margin:0 10px 
 }
 
 .card-actions>a:only-child{width:100%;grid-column:1/-1;min-height:54px}
+
+/* Larger reading sizes, with extra space for mobile controls and room facts. */
+body{font-size:18px;line-height:1.75}
+.guest-form p,.room-card p,.service p,.editor-content,.room-photo-note p,
+.room-amenities,.reservation-support p{font-size:18px}
+label,.reservation-fields>label{font-size:17px}
+input:not([type=checkbox]),select,textarea{font-size:18px}
+button,.button,.card-actions>a,.card-actions .button{font-size:18px}
+.eyebrow,.booking-step,.demo-tag{font-size:14px;letter-spacing:1.5px}
+.room-card .price{font-size:28px}
+.price small,.fineprint,.room-photo-caption,.about-page-photo figcaption,
+.hotel-photo figcaption,.room-facts span,.room-rate>span,.room-rate small,
+.room-demo-notice,.reservation-help,.reservation-guide span{font-size:16px}
+.room-breadcrumb{font-size:16px}
+.room-facts strong,.room-information .room-amenities-heading{font-size:20px}
+.reservation-compact .reservation-main h2{font-size:30px}
+.room-card h3,.page-room-list h2{font-size:30px}
+.room-card,.room-facts li,.room-amenities li{overflow-wrap:anywhere}
+@media(max-width:980px){
+  .nav a:not(.button),.booking-search button{font-size:18px}
+}
+@media(max-width:680px){
+  .hero p,.editor-content,.room-amenities,.receipt pre{font-size:18px}
+  .hero .eyebrow,.room-information>.eyebrow,.booking-step{font-size:14px}
+  .booking-search label,.guest-form label,.reservation-fields>label{font-size:18px}
+  .booking-search button,.reservation-form>button,.card-actions>a,.card-actions .button{font-size:18px;min-height:58px}
+  .reservation-form>button{white-space:normal}
+  input:not([type=checkbox]),select,textarea{min-height:58px}
+  .room-breadcrumb{font-size:16px;gap:8px}
+  .room-information h1{font-size:38px}
+  .room-card h3,.page-room-list h2,.service h3{font-size:30px}
+  .room-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .room-facts strong{font-size:20px}
+  .room-facts li:nth-child(2){border-right:0}
+  .room-facts li:last-child{grid-column:1/-1;padding:16px 0 0}
+  .room-amenities{grid-template-columns:minmax(0,1fr)}
+  .room-rate strong{font-size:36px}
+  .room-description-grid h3{font-size:28px}
+}
+
+/* Keep navigation prominent at desktop and mobile sizes. */
+.manual-deposit{margin:24px 0;padding:24px;background:var(--cream);border:2px solid var(--gold);border-radius:12px}
+.manual-deposit dt{margin-top:16px;font-size:16px;color:var(--muted)}
+.deposit-qr{margin:24px 0;text-align:center}.deposit-qr img{display:block;width:min(100%,320px);height:auto;object-fit:contain;margin:auto;background:white;padding:12px}.deposit-qr figcaption{font-size:16px;margin-top:12px}
+.manual-deposit dd{margin:4px 0 0;font-size:24px;font-weight:700;overflow-wrap:anywhere;user-select:all}
+@media(max-width:680px){.manual-deposit{padding:18px}.manual-deposit dd{font-size:22px}}
+.nav a:not(.button){font-size:18px;font-weight:600;line-height:1.5}
+@media(max-width:980px){
+  .menu-toggle{font-size:21px;min-height:56px;min-width:100px;padding:12px 18px}
+  .nav a:not(.button),.nav .button{font-size:22px;line-height:1.45;min-height:60px;padding:14px 18px}
+  .nav ul{gap:12px}
+}

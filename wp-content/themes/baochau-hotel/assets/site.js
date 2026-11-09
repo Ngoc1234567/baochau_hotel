@@ -46,7 +46,7 @@ document.querySelectorAll('.booking-search, .reservation-form').forEach(form => 
     next.setDate(next.getDate() + 1);
     const day = `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}-${String(next.getDate()).padStart(2,'0')}`;
     checkout.min = day;
-    if (checkout.value && checkout.value <= checkin.value) checkout.value = day;
+    if (!checkout.value || checkout.value <= checkin.value) checkout.value = day;
   };
   checkin.addEventListener('change', update);
   update();

@@ -36,7 +36,10 @@ function bch_create_site_pages() {
 add_action('after_switch_theme','bch_create_site_pages');
 add_action('admin_init',function () { if (current_user_can('manage_options') && get_option('bch_site_pages_version')!=='1') bch_create_site_pages(); });
 function bch_page_heading($eyebrow) {
-    echo '<header class="content-page-heading"><p class="eyebrow">'.esc_html($eyebrow).'</p><h1>'.esc_html(get_the_title()).'</h1></header>';
+    $eyebrow=bch_field('bch_page_eyebrow',$eyebrow);
+    $title=bch_field('bch_page_title')?:get_the_title();
+    echo '<header class="content-page-heading"><p class="eyebrow">'.esc_html($eyebrow).'</p><h1>'.esc_html($title).'</h1></header>';
+    if ($banner=absint(bch_field('bch_page_banner'))) echo wp_get_attachment_image($banner,'large',false,['class'=>'acf-page-banner','loading'=>'eager']);
 }
 function bch_page_demo_note() {
     if (get_theme_mod('bch_demo',true)) echo '<p class="notice">Nội dung demo — thông tin và tiện ích cần được khách sạn cập nhật trước khi vận hành.</p>';

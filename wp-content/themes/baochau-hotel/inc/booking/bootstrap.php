@@ -10,7 +10,22 @@ add_action('init', function () {
     if (!wp_next_scheduled('bch_expire')) wp_schedule_event(time(), 'bch_minute', 'bch_expire');
 });
 add_action('bch_expire', 'bch_expire');
-function bch_settings() { return wp_parse_args(get_option('bch_settings', []), ['bank'=>'','holder'=>'','account'=>'','hours'=>2,'live'=>0,'mail'=>0,'contact'=>'Vui lòng cập nhật thông tin lễ tân','policy'=>BCH_POLICY]); }
+function bch_settings() {
+    $s=wp_parse_args(get_option('bch_settings', []), ['bank'=>'','holder'=>'','account'=>'','qr_url'=>'','hours'=>2,'live'=>0,'mail'=>0,'contact'=>'Vui lòng cập nhật thông tin lễ tân','policy'=>BCH_POLICY]);
+    $page=(int)get_option('bch_booking_page');
+    foreach (['bank','holder','account','live'] as $key) {
+        $field='bch_payment_'.$key;
+        if ($page && metadata_exists('post',$page,$field)) {
+            $value=get_post_meta($page,$field,true);
+            $s[$key]=$key==='live'?(int)(bool)$value:sanitize_text_field($value);
+        }
+    }
+    if ($page && metadata_exists('post',$page,'bch_payment_qr')) {
+        $id=absint(get_post_meta($page,'bch_payment_qr',true));
+        $s['qr_url']=$id && wp_attachment_is_image($id)?(wp_get_attachment_image_url($id,'full')?:''):'';
+    }
+    return $s;
+}
 function bch_ready() { $s=bch_settings(); return $s['live'] && $s['bank'] && $s['holder'] && $s['account']; }
 function bch_money($n) { return number_format((int)$n, 0, ',', '.') . ' ₫'; }
 function bch_url($args=[]) { return add_query_arg($args, get_permalink((int)get_option('bch_booking_page')) ?: home_url('/')); }

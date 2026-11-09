@@ -10,13 +10,23 @@ add_action('init',function () {
     add_shortcode('baochau_booking','bch_booking_screen');
     add_shortcode('baochau_policy',function () { return '<p>'.esc_html(BCH_POLICY).'</p><p>'.nl2br(esc_html(bch_settings()['policy'])).'</p><p>Thời gian giữ chỗ: '.esc_html(bch_settings()['hours']).' giờ. Giao dịch đến muộn: liên hệ lễ tân; đơn hết hạn không tự khôi phục.</p>'; });
 });
+function bch_form_dates($in='',$out='') {
+    $tz=new DateTimeZone('Asia/Ho_Chi_Minh');
+    $now=new DateTimeImmutable('today',$tz);
+    $today=$now->format('Y-m-d');
+    if ($in==='') $in=$today;
+    $start=DateTimeImmutable::createFromFormat('!Y-m-d',$in,$tz);
+    $next=($start && $start->format('Y-m-d')===$in ? $start : $now)->modify('+1 day')->format('Y-m-d');
+    if ($out==='') $out=$next;
+    return [$in,$out,$today,$next];
+}
 function bch_search_form($in='',$out='',$guests=2) {
-    $today=wp_date('Y-m-d',null,new DateTimeZone('Asia/Ho_Chi_Minh'));
+    [$in,$out,$today,$next]=bch_form_dates($in,$out);
     ob_start(); ?>
     <form class="booking-search" method="get" action="<?php echo esc_url(bch_url()); ?>">
         <?php if (!get_option('permalink_structure')): ?><input type="hidden" name="page_id" value="<?php echo esc_attr(get_option('bch_booking_page')); ?>"><?php endif; ?>
         <label>Ngày nhận phòng<input type="date" name="in" min="<?php echo esc_attr($today); ?>" value="<?php echo esc_attr($in); ?>" required></label>
-        <label>Ngày trả phòng<input type="date" name="out" min="<?php echo esc_attr($today); ?>" value="<?php echo esc_attr($out); ?>" required></label>
+        <label>Ngày trả phòng<input type="date" name="out" min="<?php echo esc_attr($next); ?>" value="<?php echo esc_attr($out); ?>" required></label>
         <label>Số khách<select name="guests"><?php for ($i=1;$i<=10;$i++) echo '<option value="'.$i.'" '.selected($guests,$i,false).'>'.$i.' khách</option>'; ?></select></label>
         <button type="submit">Tìm phòng trống <span aria-hidden="true">↗</span></button>
     </form>
@@ -72,7 +82,8 @@ function bch_booking_screen() {
                 foreach (bch_rooms() as $room) {
                     try { $quote=bch_price($room,$days,$guests); } catch (InvalidArgumentException $e) { continue; }
                     $left=bch_available($room,$days); if (!$left) continue; $found++;
-                    echo '<article class="room-card"><h3>'.esc_html($room->name).'</h3><p>'.esc_html($room->area).' m² · '.esc_html($room->bed).'</p><p>Còn '.esc_html($left).' phòng</p><strong>'.esc_html(bch_money($quote['total'])).' / '.count($days).' đêm</strong><p>Cọc 30%: '.esc_html(bch_money($quote['deposit'])).'</p><a class="button" href="'.esc_url(bch_url(['in'=>$in,'out'=>$out,'guests'=>$guests,'room'=>$room->id])).'">Chọn phòng →</a></article>';
+                    $link=add_query_arg(['room_detail'=>$room->id,'in'=>$in,'out'=>$out,'guests'=>$guests],bch_page_url('phong-nghi'));
+                    echo '<article class="room-card"><a href="'.esc_url($link).'"><img loading="lazy" src="'.esc_url(bch_theme_image($room)).'" alt="'.esc_attr($room->name).'"></a><p class="eyebrow">PHÒNG NGHỈ'.(get_theme_mod('bch_demo',true)?' · DEMO':'').'</p><h3>'.esc_html($room->name).'</h3><p>'.esc_html($room->area).' m² · '.esc_html($room->capacity).' khách · '.esc_html($room->bed).'</p><p>Còn '.esc_html($left).' phòng</p><p class="price">'.esc_html(bch_money($quote['total'])).' <small>/ '.count($days).' đêm</small></p><p>Cọc 30%: '.esc_html(bch_money($quote['deposit'])).'</p><div class="card-actions"><a class="button" href="'.esc_url($link).'">Đặt phòng →</a></div></article>';
                 }
                 echo '</div>'; if (!$found) echo '<p role="status">Không còn phòng phù hợp. Hãy đổi ngày hoặc số khách.</p>';
             }
@@ -99,7 +110,7 @@ function bch_reservation_form($values=[],$collapsed=false,$compact=false) {
     $v=wp_parse_args($values,['name'=>'','phone'=>'','email'=>'','in'=>'','out'=>'','guests'=>2,'room'=>0]);
     $fixed_room=$compact?bch_room(absint($v['room'])):null;
     if ($fixed_room) $v['guests']=min((int)$fixed_room->capacity,max(1,(int)$v['guests']));
-    $today=wp_date('Y-m-d',null,new DateTimeZone('Asia/Ho_Chi_Minh'));
+    [$v['in'],$v['out'],$today,$next]=bch_form_dates($v['in'],$v['out']);
     if ($collapsed) echo '<details class="booking-edit"><summary>Thay đổi ngày ở hoặc hạng phòng</summary>';
     ?>
     <div class="reservation-layout<?php echo $compact?' reservation-compact':''; ?>">
@@ -115,7 +126,7 @@ function bch_reservation_form($values=[],$collapsed=false,$compact=false) {
                     <label>Họ và tên <span aria-hidden="true">*</span><input name="guest_name" autocomplete="name" maxlength="190" placeholder="Nhập họ và tên" value="<?php echo esc_attr($v['name']); ?>" required></label>
                     <label>Số điện thoại <span aria-hidden="true">*</span><input name="phone" type="tel" autocomplete="tel" maxlength="25" placeholder="Số điện thoại liên hệ" value="<?php echo esc_attr($v['phone']); ?>" required></label>
                     <label>Ngày nhận phòng <span aria-hidden="true">*</span><input type="date" name="in" min="<?php echo esc_attr($today); ?>" value="<?php echo esc_attr($v['in']); ?>" required></label>
-                    <label>Ngày trả phòng <span aria-hidden="true">*</span><input type="date" name="out" min="<?php echo esc_attr($today); ?>" value="<?php echo esc_attr($v['out']); ?>" required></label>
+                    <label>Ngày trả phòng <span aria-hidden="true">*</span><input type="date" name="out" min="<?php echo esc_attr($next); ?>" value="<?php echo esc_attr($v['out']); ?>" required></label>
                     <label>Số khách <span aria-hidden="true">*</span><select name="guests"><?php for ($i=1;$i<=($fixed_room?(int)$fixed_room->capacity:10);$i++) echo '<option value="'.$i.'" '.selected($v['guests'],$i,false).'>'.$i.' khách</option>'; ?></select></label>
                     <?php if ($fixed_room): ?><input type="hidden" name="room" value="<?php echo esc_attr($fixed_room->id); ?>"><?php else: ?>
                     <label>Chọn hạng phòng <span aria-hidden="true">*</span><select name="room" required><option value="">Chọn phòng bạn yêu thích</option><?php foreach (bch_rooms() as $r) { if ((int)$r->quantity<1) continue; echo '<option value="'.esc_attr($r->id).'" '.selected($v['room'],$r->id,false).'>'.esc_html($r->name.' · tối đa '.$r->capacity.' khách').'</option>'; } ?></select></label>
@@ -137,7 +148,18 @@ function bch_reservation_form($values=[],$collapsed=false,$compact=false) {
     if ($collapsed) echo '</details>';
 }
 function bch_receipt($r) {
-    echo '<section class="receipt"><p class="eyebrow">THÔNG TIN GIỮ CHỖ</p><h2>'.esc_html(bch_status($r->status)).'</h2><p>Lưu lại nội dung này và mã đặt phòng để liên hệ lễ tân.</p><pre>'.esc_html(bch_receipt_text($r)).'</pre>';
-    if (in_array($r->status,['expired','cancelled'],true)) echo '<p class="notice">Không chuyển khoản cho đơn này. Nếu đã chuyển tiền, liên hệ lễ tân để kiểm tra; không tự khôi phục đơn.</p>';
+    $pending=$r->status==='pending' && strtotime($r->expires_at.' UTC')>time();
+    $expired=$r->status==='pending' && !$pending;
+    echo '<section class="receipt"><p class="eyebrow">THÔNG TIN GIỮ CHỖ</p><h2>'.esc_html(bch_status($expired?'expired':$r->status)).'</h2><p>Mã đặt phòng: <strong>'.esc_html($r->code).'</strong></p><p>'.esc_html($r->room_name).' · '.esc_html($r->checkin.' → '.$r->checkout).' · '.esc_html($r->guests).' khách</p><p>Tổng tiền phòng: <strong>'.esc_html(bch_money($r->total)).'</strong></p>';
+    if ($pending) {
+        $bank=json_decode($r->bank,true)?:[];
+        echo '<div class="manual-deposit"><h3>Chuyển khoản cọc để xác nhận phòng</h3><p>Vui lòng chuyển khoản theo thông tin bên dưới. Khách sạn sẽ kiểm tra và xác nhận thủ công sau khi nhận đủ tiền cọc.</p><dl>';
+        foreach (['Ngân hàng'=>$bank['bank']??'','Số tài khoản'=>$bank['account']??'','Chủ tài khoản'=>$bank['holder']??'','Số tiền cọc (30%)'=>bch_money($r->deposit),'Nội dung chuyển khoản'=>$r->code] as $label=>$value) echo '<dt>'.esc_html($label).'</dt><dd>'.esc_html($value).'</dd>';
+        echo '</dl>';
+        if (!empty($bank['qr_url'])) echo '<figure class="deposit-qr"><a href="'.esc_url($bank['qr_url']).'" target="_blank" rel="noopener"><img src="'.esc_url($bank['qr_url']).'" alt="Mã QR tài khoản nhận cọc" width="320" height="320"></a><figcaption>Quét QR hoặc bấm ảnh để mở và lưu. Nhập đúng số tiền cọc và mã đặt phòng ở trên.</figcaption></figure>';
+        echo '<p>Chuyển khoản trước <strong>'.esc_html(wp_date('d/m/Y H:i',strtotime($r->expires_at.' UTC'),new DateTimeZone('Asia/Ho_Chi_Minh'))).'</strong> (giờ Việt Nam).</p><p>Đơn đang chờ nhận cọc. Lưu lại mã đặt phòng để liên hệ lễ tân.</p></div>';
+    }
+    if ($expired || in_array($r->status,['expired','cancelled'],true)) echo '<p class="notice">Không chuyển khoản cho đơn này. Nếu đã chuyển tiền, liên hệ lễ tân để kiểm tra; không tự khôi phục đơn.</p>';
+    echo '<p>Còn lại sau khi thanh toán đủ cọc: '.esc_html(bch_money($r->total-$r->deposit)).'</p><p>'.esc_html(BCH_POLICY).'</p><p>'.esc_html(bch_settings()['contact']).'</p>';
     echo '</section>';
 }

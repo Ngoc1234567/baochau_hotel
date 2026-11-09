@@ -1,0 +1,9 @@
+.bch-image-editor { max-width: 920px; margin: 24px 0; padding: 20px; background: #fff; border: 1px solid #c3c4c7; border-radius: 8px; }
+.bch-image-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 16px; }
+.bch-image-card { min-width: 0; }
+.bch-image-card img { display: block; width: 100%; height: 130px; object-fit: cover; border-radius: 6px; background: #f0f0f1; }
+.bch-image-card strong { display: block; margin: 10px 0; }
+.bch-image-card > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.bch-image-editor .button { min-height: 44px; min-width: 44px; }
+.bch-image-status { margin-bottom: 0; }
+@media (max-width: 480px) { .bch-image-editor { padding: 12px; } .bch-image-list { grid-template-columns: 1fr; } .bch-image-card img { height: 190px; } }

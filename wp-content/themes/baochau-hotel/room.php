@@ -15,6 +15,9 @@ get_header(); ?>
 <?php if (count($images)>1): ?><div class="room-thumbnails" aria-label="Chọn ảnh phòng"><?php foreach ($images as $index=>$url): ?><a href="<?php echo esc_url($url); ?>" data-gallery-thumb aria-label="Xem ảnh <?php echo (int)$index+1; ?>" aria-current="<?php echo $index===0?'true':'false'; ?>"><img src="<?php echo esc_url($url); ?>" alt="<?php echo esc_attr($room->name.' — ảnh '.($index+1)); ?>" loading="lazy"></a><?php endforeach; ?></div><?php endif; ?>
 <p class="room-photo-caption"><?php echo $illustration?'Hình minh họa · Ảnh thực tế của hạng phòng đang được cập nhật.':'Chọn ảnh nhỏ để xem. Bấm ảnh lớn để mở kích thước đầy đủ.'; ?></p>
 <p class="room-gallery-status screen-reader-text" aria-live="polite"></p>
+<?php foreach ($images as $image_url): $source=get_post_meta(attachment_url_to_postid($image_url),'_bch_image_source',true); if ($source): ?>
+<p class="room-photo-caption">Ảnh minh họa từ <a href="<?php echo esc_url($source); ?>" target="_blank" rel="noopener">Sunrise Đà Lạt</a>, không phải ảnh thực tế của Bảo Châu.</p>
+<?php break; endif; endforeach; ?>
 <div class="room-photo-note"><span aria-hidden="true">◇</span><div><strong>Đặt trực tiếp với Bảo Châu</strong><p>Kiểm tra phòng trống theo ngày. Xem đầy đủ tiền phòng và cọc 30% trước khi giữ chỗ.</p></div></div>
 </section>
 <section class="room-information" aria-labelledby="room-name">
@@ -25,7 +28,12 @@ get_header(); ?>
 <div class="room-rate"><span>Giá từ <?php if (get_theme_mod('bch_demo',true)) echo '· minh họa'; ?></span><p><strong><?php echo esc_html(bch_money($room->price)); ?></strong> / đêm</p><small>Giá từng đêm và tình trạng phòng được kiểm tra khi chọn ngày ở.</small></div>
 <?php if ((int)$room->quantity>0): ?>
 <?php if (!bch_ready()): ?><p class="room-demo-notice">Bản demo: bạn có thể kiểm tra giá; chưa nhận giữ chỗ thật.</p><?php endif; ?>
-<div id="room-reservation"><?php bch_reservation_form(['room'=>$room->id],false,true); ?></div>
+<div id="room-reservation"><?php bch_reservation_form([
+    'room'=>$room->id,
+    'in'=>sanitize_text_field(wp_unslash($_GET['in']??'')),
+    'out'=>sanitize_text_field(wp_unslash($_GET['out']??'')),
+    'guests'=>absint($_GET['guests']??2),
+],false,true); ?></div>
 <?php else: ?><p class="notice">Hạng phòng hiện tạm ngừng nhận đặt. Vui lòng chọn phòng khác hoặc liên hệ lễ tân.</p><?php endif; ?>
 </section>
 </div>

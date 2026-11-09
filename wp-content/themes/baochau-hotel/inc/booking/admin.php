@@ -1,5 +1,23 @@
 <?php
 defined('ABSPATH') || exit;
+add_action('admin_enqueue_scripts',function () {
+    if (($_GET['page']??'')!=='bch-rooms' || !current_user_can('manage_options')) return;
+    wp_enqueue_media();
+    wp_enqueue_script('bch-room-images',get_template_directory_uri().'/assets/admin-rooms.js',['media-views'],'1.0.0',true);
+    wp_enqueue_style('bch-room-images',get_template_directory_uri().'/assets/admin-rooms.css',[],'1.0.0');
+});
+function bch_admin_room_images($value) {
+    $images=[];
+    foreach (preg_split('/\R/',trim($value)) as $line) {
+        if (!trim($line)) continue;
+        $url=esc_url_raw(trim($line),['http','https']);
+        if (!$url || !wp_parse_url($url,PHP_URL_HOST)) throw new RuntimeException('URL ảnh không hợp lệ.');
+        $images[]=$url;
+    }
+    $images=array_values(array_unique($images));
+    if (count($images)>5) throw new RuntimeException('Mỗi hạng phòng được chọn tối đa 5 ảnh.');
+    return $images;
+}
 add_action('admin_menu',function () {
     add_menu_page('Bảo Châu','Bảo Châu','bch_manage_bookings','bch-bookings','bch_admin_bookings','dashicons-building',26);
     add_submenu_page('bch-bookings','Hạng phòng','Hạng phòng','manage_options','bch-rooms','bch_admin_rooms');
@@ -49,7 +67,7 @@ function bch_admin_rooms() {
             }
             $closed=array_values(array_filter(array_map('trim',preg_split('/\R/',wp_unslash($_POST['closed']??'')))));
             foreach ($closed as $day) if (!bch_valid_date($day)) throw new RuntimeException('Ngày đóng bán phải có dạng YYYY-MM-DD hợp lệ.');
-            $images=array_values(array_filter(array_map('esc_url_raw',preg_split('/\R/',wp_unslash($_POST['images']??'')))));
+            $images=bch_admin_room_images(wp_unslash($_POST['images']??''));
             $data['rates']=wp_json_encode($rates); $data['closed']=wp_json_encode($closed); $data['images']=wp_json_encode($images);
             bch_atomic(function () use ($data) {
                 global $wpdb; $id=absint($_POST['id']??0); $table=bch_table('rooms');
@@ -66,7 +84,7 @@ function bch_admin_rooms() {
             echo '<div class="notice notice-success"><p>Đã lưu hạng phòng.</p></div>';
         } catch (Throwable $e) { bch_admin_error($e); }
     }
-    echo '<div class="wrap"><h1>Hạng phòng</h1><p>Ảnh: tải vào Media rồi dán URL, mỗi dòng một ảnh. Không có ảnh sẽ dùng hình minh họa.</p><p><a href="?page=bch-rooms">+ Thêm hạng phòng</a></p>';
+    echo '<div class="wrap"><h1>Hạng phòng</h1><p>Chọn 3–5 ảnh cho mỗi hạng phòng từ thư viện hoặc tải ảnh mới. Ảnh đầu tiên là ảnh đại diện. Không có ảnh sẽ dùng hình minh họa.</p><p><a href="?page=bch-rooms">+ Thêm hạng phòng</a></p>';
     foreach (bch_rooms() as $room) echo '<p><a href="'.esc_url(add_query_arg(['page'=>'bch-rooms','edit'=>$room->id],admin_url('admin.php'))).'">'.esc_html($room->name).'</a> — '.esc_html($room->quantity).' phòng · '.esc_html(bch_money($room->price)).'</p>';
     $r=bch_room(absint($_GET['edit']??0));
     echo '<hr><h2>'.($r?'Sửa hạng phòng':'Thêm hạng phòng').'</h2><form method="post">'; wp_nonce_field('bch_rooms');
