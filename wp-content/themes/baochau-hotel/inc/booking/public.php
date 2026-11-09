@@ -1,7 +1,16 @@
 <?php
 defined('ABSPATH') || exit;
 add_action('template_redirect',function () {
+    if (!empty($_COOKIE['bch_booking_access'])) {
+        if (!defined('DONOTCACHEPAGE')) define('DONOTCACHEPAGE',true);
+        nocache_headers();
+    }
     if (is_page((int)get_option('bch_booking_page')) || isset($_GET['room_detail'])) {
+        if (empty($_COOKIE['bch_booking_access']) || !is_string($_COOKIE['bch_booking_access']) || !preg_match('/^[a-f0-9]{64}$/',$_COOKIE['bch_booking_access'])) {
+            $token=bin2hex(random_bytes(32));
+            setcookie('bch_booking_access',$token,['expires'=>time()+90*DAY_IN_SECONDS,'path'=>'/','secure'=>is_ssl(),'httponly'=>true,'samesite'=>'Lax']);
+            $_COOKIE['bch_booking_access']=$token;
+        }
         if (!defined('DONOTCACHEPAGE')) define('DONOTCACHEPAGE',true);
         nocache_headers(); header('Referrer-Policy: no-referrer'); header('X-Robots-Tag: noindex, nofollow');
     }
@@ -22,7 +31,7 @@ function bch_form_dates($in='',$out='') {
 }
 function bch_search_form($in='',$out='',$guests=2) {
     [$in,$out,$today,$next]=bch_form_dates($in,$out);
-    ob_start(); ?>
+    ob_start(); bch_recent_booking_links(); ?>
     <form class="booking-search" method="get" action="<?php echo esc_url(bch_url()); ?>">
         <?php if (!get_option('permalink_structure')): ?><input type="hidden" name="page_id" value="<?php echo esc_attr(get_option('bch_booking_page')); ?>"><?php endif; ?>
         <label>Ngày nhận phòng<input type="date" name="in" min="<?php echo esc_attr($today); ?>" value="<?php echo esc_attr($in); ?>" required></label>
@@ -37,11 +46,18 @@ function bch_booking_screen() {
     echo '<div class="booking-flow">';
     if (!bch_ready()) echo '<p class="notice">Bản demo — chưa mở nhận giữ chỗ thật. Bạn có thể tìm phòng và xem giá minh họa.</p>';
     try {
+        if (isset($_GET['view_booking'])) {
+            global $wpdb;
+            $r=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.bch_table('bookings').' WHERE id=%d',absint($_GET['view_booking'])));
+            if (!$r || !bch_owned_booking($r)) throw new RuntimeException('Không thể mở đơn trên trình duyệt này. Vui lòng dùng trình duyệt đã đặt hoặc liên hệ lễ tân.');
+            bch_receipt($r); echo '</div>'; return ob_get_clean();
+        }
         if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['bch_hold'])) {
             if (!wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce']??'')),'bch_hold')) throw new RuntimeException('Phiên đã hết hạn. Vui lòng tải lại trang.');
             $data=[]; foreach (['in','out','key','token','name','phone','email'] as $k) $data[$k]=sanitize_text_field(wp_unslash($_POST[$k === 'name' ? 'guest_name' : $k]??''));
             foreach (['room','guests','quoted'] as $k) $data[$k]=absint($_POST[$k === 'name' ? 'guest_name' : $k]??0);
             if (empty($_POST['agree'])) throw new RuntimeException('Vui lòng đồng ý chính sách đặt cọc.');
+            if (!hash_equals($_COOKIE['bch_booking_access']??'',$data['token'])) throw new RuntimeException('Phiên đặt phòng đã thay đổi. Vui lòng tải lại trang và thử lại.');
             // Soft abuse limit; inventory correctness is enforced inside the DB transaction.
             $rate='bch_rate_'.hash('sha256',$_SERVER['REMOTE_ADDR']??''); $count=(int)get_transient($rate);
             if ($count>=20) throw new RuntimeException('Bạn gửi quá nhiều yêu cầu. Vui lòng thử lại sau 10 phút.');
@@ -56,9 +72,15 @@ function bch_booking_screen() {
             $days=bch_dates($in,$out); $room=bch_room(absint($_POST['room']??0));
             if (!$room) throw new RuntimeException('Vui lòng chọn hạng phòng.');
             $quote=bch_price($room,$days,$guests);
-            if (!bch_available($room,$days)) throw new RuntimeException('Hạng phòng này đã hết chỗ trong ngày bạn chọn. Vui lòng đổi hạng phòng hoặc ngày lưu trú.');
             $guest=[]; foreach (['name','phone','email'] as $key) $guest[$key]=sanitize_text_field(wp_unslash($_POST[$key === 'name' ? 'guest_name' : $key]??''));
             if (!$guest['name'] || strlen($guest['name'])>190 || !is_email($guest['email']) || strlen($guest['email'])>190 || !preg_match('/^[+0-9 ()-]{8,25}$/',$guest['phone'])) throw new RuntimeException('Vui lòng nhập đúng họ tên, số điện thoại và email để tiếp tục.');
+            $existing=bch_duplicate_booking($guest['email'],$guest['phone'],$in,$out);
+            if ($existing) {
+                if (!bch_owned_booking($existing)) throw new RuntimeException('Thông tin liên hệ này đã có đơn cho kỳ nghỉ trùng ngày. Hãy mở đơn trên trình duyệt đã đặt hoặc liên hệ lễ tân; không chuyển cọc thêm.');
+                echo '<p class="notice">Bạn đã có đơn cho kỳ nghỉ này. Vui lòng xem đơn bên dưới, không cần đặt hoặc chuyển cọc thêm.</p>';
+                bch_receipt($existing); echo '</div>'; return ob_get_clean();
+            }
+            if (!bch_available($room,$days)) throw new RuntimeException('Hạng phòng này đã hết chỗ trong ngày bạn chọn. Vui lòng đổi hạng phòng hoặc ngày lưu trú.');
             echo '<p class="booking-step">BƯỚC 2 / 2 · KIỂM TRA & GIỮ CHỖ</p>';
             bch_checkout($room,$quote,$in,$out,$guests,$guest);
             bch_reservation_form(array_merge($guest,['in'=>$in,'out'=>$out,'guests'=>$guests,'room'=>$room->id]),true);
@@ -102,11 +124,12 @@ function bch_checkout($room,$q,$in,$out,$guests,$guest=[]) {
     foreach ($q['nightly'] as $day=>$price) echo '<li>'.esc_html($day).' — '.esc_html(bch_money($price)).'</li>';
     echo '</ul></details><p>Tổng tiền phòng <strong>'.esc_html(bch_money($q['total'])).'</strong></p><p>Cọc 30% <strong>'.esc_html(bch_money($q['deposit'])).'</strong></p><p>Còn lại '.esc_html(bch_money($q['total']-$q['deposit'])).'</p><p>Thời hạn giữ chỗ: '.esc_html(bch_settings()['hours']).' giờ kể từ khi tạo đơn.</p></section><form method="post" class="guest-form">';
     wp_nonce_field('bch_hold');
-    $fields=['bch_hold'=>1,'room'=>$room->id,'in'=>$in,'out'=>$out,'guests'=>$guests,'quoted'=>$q['total'],'key'=>bin2hex(random_bytes(32)),'token'=>bin2hex(random_bytes(32))];
+    $fields=['bch_hold'=>1,'room'=>$room->id,'in'=>$in,'out'=>$out,'guests'=>$guests,'quoted'=>$q['total'],'key'=>bin2hex(random_bytes(32)),'token'=>$_COOKIE['bch_booking_access']??bin2hex(random_bytes(32))];
     foreach ($fields as $k=>$v) echo '<input type="hidden" name="'.esc_attr($k).'" value="'.esc_attr($v).'">';
     echo '<h2>Thông tin khách</h2><label>Họ tên<input name="guest_name" autocomplete="name" maxlength="190" value="'.esc_attr($guest['name']??'').'" required></label><label>Số điện thoại<input type="tel" name="phone" autocomplete="tel" maxlength="25" value="'.esc_attr($guest['phone']??'').'" required></label><label>Email<input type="email" name="email" autocomplete="email" maxlength="190" value="'.esc_attr($guest['email']??'').'" required></label><p>'.esc_html(BCH_POLICY).'</p><label class="consent"><input type="checkbox" name="agree" required> Tôi đồng ý <a href="'.esc_url(get_permalink(get_option('bch_policy_page'))).'">chính sách đặt cọc</a>.</label><button '.disabled(bch_ready(),false,false).'>Giữ chỗ · Cọc '.esc_html(bch_money($q['deposit'])).'</button></form></div>';
 }
 function bch_reservation_form($values=[],$collapsed=false,$compact=false) {
+    bch_recent_booking_links();
     $v=wp_parse_args($values,['name'=>'','phone'=>'','email'=>'','in'=>'','out'=>'','guests'=>2,'room'=>0]);
     $fixed_room=$compact?bch_room(absint($v['room'])):null;
     if ($fixed_room) $v['guests']=min((int)$fixed_room->capacity,max(1,(int)$v['guests']));
@@ -148,6 +171,7 @@ function bch_reservation_form($values=[],$collapsed=false,$compact=false) {
     if ($collapsed) echo '</details>';
 }
 function bch_receipt($r) {
+    if (bch_owned_booking($r)) echo '<p><a class="button" href="'.esc_url(bch_url(['view_booking'=>$r->id])).'">Xem / cập nhật trạng thái đơn</a></p>';
     $pending=$r->status==='pending' && strtotime($r->expires_at.' UTC')>time();
     $expired=$r->status==='pending' && !$pending;
     echo '<section class="receipt"><p class="eyebrow">THÔNG TIN GIỮ CHỖ</p><h2>'.esc_html(bch_status($expired?'expired':$r->status)).'</h2><p>Mã đặt phòng: <strong>'.esc_html($r->code).'</strong></p><p>'.esc_html($r->room_name).' · '.esc_html($r->checkin.' → '.$r->checkout).' · '.esc_html($r->guests).' khách</p><p>Tổng tiền phòng: <strong>'.esc_html(bch_money($r->total)).'</strong></p>';
@@ -162,4 +186,14 @@ function bch_receipt($r) {
     if ($expired || in_array($r->status,['expired','cancelled'],true)) echo '<p class="notice">Không chuyển khoản cho đơn này. Nếu đã chuyển tiền, liên hệ lễ tân để kiểm tra; không tự khôi phục đơn.</p>';
     echo '<p>Còn lại sau khi thanh toán đủ cọc: '.esc_html(bch_money($r->total-$r->deposit)).'</p><p>'.esc_html(BCH_POLICY).'</p><p>'.esc_html(bch_settings()['contact']).'</p>';
     echo '</section>';
+}
+function bch_recent_booking_links() {
+    $token=$_COOKIE['bch_booking_access']??'';
+    if (!is_string($token) || !preg_match('/^[a-f0-9]{64}$/',$token)) return;
+    global $wpdb;
+    $rows=$wpdb->get_results($wpdb->prepare('SELECT id,code FROM '.bch_table('bookings').' WHERE token_hash=%s ORDER BY id DESC LIMIT 5',hash('sha256',$token)));
+    if (!$rows) return;
+    echo '<aside class="notice"><strong>Đơn đặt phòng của bạn</strong><p>Đã chuyển cọc? Mở đơn để xem trạng thái, không cần đặt lại.</p>';
+    foreach ($rows as $row) echo '<p><a href="'.esc_url(bch_url(['view_booking'=>$row->id])).'">Xem đơn '.esc_html($row->code).'</a></p>';
+    echo '</aside>';
 }

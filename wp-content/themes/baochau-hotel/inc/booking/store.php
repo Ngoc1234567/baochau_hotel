@@ -90,6 +90,23 @@ function bch_available($room,$days) {
     }
     return max(0,$min);
 }
+function bch_customer_phone($phone) {
+    $phone=preg_replace('/\D/','',$phone);
+    if (str_starts_with($phone,'0084')) $phone='0'.substr($phone,4);
+    elseif (str_starts_with($phone,'84')) $phone='0'.substr($phone,2);
+    return $phone;
+}
+function bch_duplicate_booking($email,$phone,$in,$out) {
+    global $wpdb;
+    $rows=$wpdb->get_results($wpdb->prepare('SELECT * FROM '.bch_table('bookings')." WHERE checkin<%s AND checkout>%s AND (status='confirmed' OR (status='pending' AND expires_at>UTC_TIMESTAMP()))",$out,$in));
+    if ($wpdb->last_error) throw new RuntimeException('Không kiểm tra được đơn hiện có. Vui lòng thử lại.');
+    foreach ($rows as $row) if (strcasecmp(trim($row->email),trim($email))===0 || bch_customer_phone($row->phone)===bch_customer_phone($phone)) return $row;
+    return null;
+}
+function bch_owned_booking($row) {
+    $token=$_COOKIE['bch_booking_access']??'';
+    return is_string($token) && preg_match('/^[a-f0-9]{64}$/',$token) && hash_equals($row->token_hash,hash('sha256',$token));
+}
 function bch_hold($data) {
     if (!bch_ready()) throw new RuntimeException('Chưa mở nhận giữ chỗ. Vui lòng liên hệ khách sạn.');
     $days=bch_dates($data['in'],$data['out']);
@@ -103,6 +120,11 @@ function bch_hold($data) {
         if ($existing) {
             if (!hash_equals($existing->fingerprint,$fingerprint) || !hash_equals($existing->token_hash,hash('sha256',$data['token']))) throw new RuntimeException('Yêu cầu đã dùng cho thông tin khác. Hãy tìm phòng lại.');
             return $existing;
+        }
+        $duplicate=bch_duplicate_booking($data['email'],$data['phone'],$data['in'],$data['out']);
+        if ($duplicate) {
+            if (bch_owned_booking($duplicate)) return $duplicate;
+            throw new RuntimeException('Thông tin liên hệ này đã có đơn cho kỳ nghỉ trùng ngày. Vui lòng mở đơn trên trình duyệt đã đặt hoặc liên hệ lễ tân để kiểm tra; không cần tạo đơn hay chuyển cọc thêm.');
         }
         $room=bch_room($data['room']);
         if (!$room) throw new InvalidArgumentException('Không tìm thấy hạng phòng.');
