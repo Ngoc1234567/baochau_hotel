@@ -48,7 +48,7 @@ function bch_booking_screen() {
     try {
         if (isset($_GET['view_booking'])) {
             global $wpdb;
-            $r=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.bch_table('bookings').' WHERE id=%d',absint($_GET['view_booking'])));
+            $r=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.bch_table('bookings').' WHERE id=%d AND deleted_at IS NULL',absint($_GET['view_booking'])));
             if (!$r || !bch_owned_booking($r)) throw new RuntimeException('Không thể mở đơn trên trình duyệt này. Vui lòng dùng trình duyệt đã đặt hoặc liên hệ lễ tân.');
             bch_receipt($r); echo '</div>'; return ob_get_clean();
         }
@@ -205,7 +205,7 @@ function bch_recent_booking_links() {
     $token=$_COOKIE['bch_booking_access']??'';
     if (!is_string($token) || !preg_match('/^[a-f0-9]{64}$/',$token)) return;
     global $wpdb;
-    $rows=$wpdb->get_results($wpdb->prepare('SELECT id,code FROM '.bch_table('bookings').' WHERE token_hash=%s ORDER BY id DESC LIMIT 5',hash('sha256',$token)));
+    $rows=$wpdb->get_results($wpdb->prepare('SELECT id,code FROM '.bch_table('bookings').' WHERE token_hash=%s AND deleted_at IS NULL ORDER BY id DESC LIMIT 5',hash('sha256',$token)));
     if (!$rows) return;
     echo '<aside class="notice"><strong>Đơn đặt phòng của bạn</strong><p>Đã chuyển cọc? Mở đơn để xem trạng thái, không cần đặt lại.</p>';
     foreach ($rows as $row) echo '<p><a href="'.esc_url(bch_url(['view_booking'=>$row->id])).'">Xem đơn '.esc_html($row->code).'</a></p>';
