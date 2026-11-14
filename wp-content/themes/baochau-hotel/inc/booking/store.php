@@ -55,6 +55,8 @@ function bch_install() {
  balance_paid bigint(20) NOT NULL DEFAULT 0,
  source varchar(20) NOT NULL DEFAULT 'website',
  created_by bigint(20) unsigned DEFAULT NULL,
+ deleted_at datetime DEFAULT NULL,
+ deleted_by bigint(20) unsigned DEFAULT NULL,
  mail_sent tinyint(1) NOT NULL DEFAULT 0,
  PRIMARY KEY  (id),
  UNIQUE KEY request_key (request_key),
@@ -84,7 +86,7 @@ function bch_install() {
         }
         update_option('bch_hourly_prices_v1',1);
     }
-    update_option('bch_schema','5');
+    update_option('bch_schema','6');
 }
 /** All inventory writes share this DB advisory lock and transaction. */
 function bch_atomic($fn) {
@@ -183,7 +185,7 @@ function bch_transition($id,$action,$balance_verified=false) {
     return bch_atomic(function () use ($id,$action,$balance_verified) {
         global $wpdb; bch_expire_rows(); $b=bch_table('bookings');
         $row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $b WHERE id=%d",$id));
-        if (!$row) throw new RuntimeException('Không tìm thấy đơn.');
+        if (!$row || !empty($row->deleted_at)) throw new RuntimeException('Không tìm thấy đơn hoặc đơn đang ở thùng rác.');
         if ($action==='confirm' && $row->status==='pending') $changes=['status'=>'confirmed','confirmed_at'=>gmdate('Y-m-d H:i:s'),'confirmed_by'=>get_current_user_id()];
         elseif ($action==='checkin' && $row->status==='confirmed') {
             if (!$balance_verified) throw new RuntimeException('Cần xác nhận đã thu đủ số tiền phòng còn lại.');
@@ -198,6 +200,20 @@ function bch_transition($id,$action,$balance_verified=false) {
         } else $updated=$wpdb->update($b,$changes,['id'=>$id]);
         if ($updated===false) throw new RuntimeException('Không cập nhật được đơn.');
         return $wpdb->get_row($wpdb->prepare("SELECT * FROM $b WHERE id=%d",$id));
+    });
+}
+function bch_booking_trash($id,$action) {
+    if (!current_user_can('bch_manage_bookings')) throw new RuntimeException('Bạn không có quyền quản lý đơn.');
+    if (!in_array($action,['trash','restore'],true)) throw new InvalidArgumentException('Thao tác không hợp lệ.');
+    return bch_atomic(function () use ($id,$action) {
+        global $wpdb; bch_expire_rows(); $table=bch_table('bookings');
+        $row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id=%d",$id));
+        if (!$row) throw new RuntimeException('Không tìm thấy đơn.');
+        if (!in_array($row->status,['cancelled','expired'],true)) throw new RuntimeException('Chỉ xóa đơn đã hủy hoặc hết hạn. Không xóa đơn đang giữ chỗ hoặc đã nhận phòng.');
+        if (($action==='trash' && $row->deleted_at) || ($action==='restore' && !$row->deleted_at)) return $row;
+        $changes=$action==='trash'?['deleted_at'=>gmdate('Y-m-d H:i:s'),'deleted_by'=>get_current_user_id()]:['deleted_at'=>null,'deleted_by'=>null];
+        if ($wpdb->update($table,$changes,['id'=>$id])===false) throw new RuntimeException('Không cập nhật được thùng rác.');
+        return $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id=%d",$id));
     });
 }
 function bch_balance_due($r) { return max(0,(int)$r->total-(int)$r->deposit-(int)($r->balance_paid??0)); }

@@ -11,7 +11,7 @@ require_once __DIR__ . '/counter.php';
 require_once __DIR__ . '/public.php';
 add_filter('cron_schedules', function ($s) { $s['bch_minute'] = ['interval'=>60,'display'=>'Mỗi phút']; return $s; });
 add_action('init', function () {
-    if (get_option('bch_schema') !== '5') bch_install();
+    if (get_option('bch_schema') !== '6') bch_install();
     if (!wp_next_scheduled('bch_expire')) wp_schedule_event(time(), 'bch_minute', 'bch_expire');
 });
 add_action('bch_expire', 'bch_expire');

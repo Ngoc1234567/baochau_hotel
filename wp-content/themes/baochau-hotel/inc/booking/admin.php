@@ -20,6 +20,7 @@ function bch_admin_room_images($value) {
 }
 add_action('admin_menu',function () {
     add_menu_page('Bảo Châu','Bảo Châu','bch_manage_bookings','bch-bookings','bch_admin_bookings','dashicons-building',26);
+    add_submenu_page('bch-bookings','Đơn đặt phòng','Đơn đặt phòng','bch_manage_bookings','bch-bookings','bch_admin_bookings');
     add_submenu_page('bch-bookings','Tạo đơn tại quầy','Tạo đơn tại quầy','bch_manage_bookings','bch-counter','bch_admin_counter');
     add_submenu_page('bch-bookings','Hạng phòng','Hạng phòng','manage_options','bch-rooms','bch_admin_rooms');
     add_submenu_page('bch-bookings','Cấu hình','Cấu hình','manage_options','bch-settings','bch_admin_settings');
@@ -139,17 +140,21 @@ function bch_admin_bookings() {
         try {
             $action=sanitize_key($_POST['action']??'');
             if ($action==='confirm' && empty($_POST['verified'])) throw new RuntimeException('Cần xác nhận đã đối chiếu và nhận đủ cọc.');
-            $r=bch_transition(absint($_POST['id']??0),$action,!empty($_POST['balance_verified']));
+            $trash_action=in_array($action,['trash','restore'],true);
+            $r=$trash_action?bch_booking_trash(absint($_POST['id']??0),$action):bch_transition(absint($_POST['id']??0),$action,!empty($_POST['balance_verified']));
             if (!$r) throw new RuntimeException('Trạng thái không cho phép thao tác. Đơn hết hạn không được khôi phục; hãy kiểm tra tồn trước khi tạo đơn mới.');
-            bch_mail($r); echo '<div class="notice notice-success"><p>Đã cập nhật đơn.</p></div>';
+            if (!$trash_action) bch_mail($r); echo '<div class="notice notice-success"><p>Đã cập nhật đơn.</p></div>';
         } catch (Throwable $e) { bch_admin_error($e); }
     }
     bch_expire(); global $wpdb;
     $page=max(1,absint($_GET['paged']??1)); $filter=sanitize_key($_GET['status']??'');
-    $where=in_array($filter,['pending','confirmed','checked_in','expired','cancelled'],true)?$wpdb->prepare(' WHERE status=%s',$filter):'';
+    $trash=($_GET['view']??'')==='trash';
+    $where=' WHERE deleted_at IS '.($trash?'NOT NULL':'NULL');
+    if (in_array($filter,['pending','confirmed','checked_in','expired','cancelled'],true)) $where.=$wpdb->prepare(' AND status=%s',$filter);
     $rows=$wpdb->get_results($wpdb->prepare('SELECT * FROM '.bch_table('bookings').$where.' ORDER BY id DESC LIMIT 30 OFFSET %d',($page-1)*30));
     echo '<div class="wrap"><h1>Đơn đặt phòng</h1><p><a class="button button-primary" href="'.esc_url(admin_url('admin.php?page=bch-counter')).'">+ Tạo đơn tại quầy</a></p><p>Thời gian Việt Nam. Kiểm tra chuyển khoản thực tế trước khi xác nhận. Email = kết quả gửi tới hệ thống mail, không bảo đảm thư đã đến hộp thư.</p><p><a href="?page=bch-bookings">Tất cả</a> ';
     foreach (['pending','confirmed','checked_in','expired','cancelled'] as $s) echo ' | <a href="?page=bch-bookings&status='.esc_attr($s).'">'.esc_html(bch_status($s)).'</a>';
+    echo ' | <a href="?page=bch-bookings&view=trash">Thùng rác</a>';
     echo '</p><table class="widefat striped"><thead><tr><th>Đơn / khách</th><th>Lưu trú</th><th>Tiền / trạng thái</th><th>Thao tác</th></tr></thead><tbody>';
     foreach ($rows as $r) {
         echo '<tr><td><strong>'.esc_html($r->code).'</strong><br>'.esc_html(($r->source??'website')==='counter'?'Tại quầy · User #'.$r->created_by:'Website').'<br>Tạo lúc '.esc_html(wp_date('d/m/Y H:i',strtotime($r->created_at.' UTC'),new DateTimeZone('Asia/Ho_Chi_Minh'))).'<br>'.esc_html($r->name).'<br>'.esc_html($r->phone).'<br>'.esc_html($r->email).'</td><td>'.esc_html($r->room_name).'<br>'.esc_html(bch_upgrade_description($r)).'<br>'.esc_html(bch_stay_label($r)).'<br>'.esc_html($r->guests).' khách</td><td>'.esc_html(bch_status($r->status)).'<br>Tổng '.esc_html(bch_money($r->total)).'<br>Cọc '.esc_html(bch_money($r->deposit)).'<br>Hạn: '.esc_html(wp_date('d/m/Y H:i',strtotime($r->expires_at.' UTC'),new DateTimeZone('Asia/Ho_Chi_Minh'))).'<br>Email: '.($r->mail_sent?'đã gửi':'chưa gửi / lỗi');
@@ -157,12 +162,16 @@ function bch_admin_bookings() {
         if ($r->status==='checked_in') echo '<br><strong>Đã thu đủ tiền phòng</strong><br>Thu khi nhận phòng: '.esc_html(bch_money($r->balance_paid)).'<br>Nhận phòng: '.esc_html(wp_date('d/m/Y H:i',strtotime($r->checked_in_at.' UTC'),new DateTimeZone('Asia/Ho_Chi_Minh'))).' · User #'.esc_html($r->checked_in_by);
         echo '<br>Còn lại sau cọc: '.esc_html(bch_money(bch_balance_due($r)));
         echo '</td><td>';
-        if (in_array($r->status,['pending','confirmed'],true)) {
+        if (!$trash && in_array($r->status,['pending','confirmed'],true)) {
             echo '<form method="post">'; wp_nonce_field('bch_booking_action'); echo '<input type="hidden" name="id" value="'.esc_attr($r->id).'">';
             if ($r->status==='pending') echo '<p><label><input type="checkbox" name="verified" value="1"> Đã đối chiếu đủ '.esc_html(bch_money($r->deposit)).'</label></p><button class="button button-primary" name="action" value="confirm">Xác nhận cọc</button> ';
             if ($r->status==='confirmed') echo '<p><label><input type="checkbox" name="balance_verified" value="1"> Đã thu đủ tiền còn lại: <strong>'.esc_html(bch_money(bch_balance_due($r))).'</strong></label></p><button class="button button-primary" name="action" value="checkin">Xác nhận đã nhận phòng</button> ';
             echo '<button class="button" name="action" value="cancel">Hủy đơn</button></form>';
         }
+        if ($trash || in_array($r->status,['cancelled','expired'],true)) {
+            echo '<form method="post">'; wp_nonce_field('bch_booking_action');
+            echo '<input type="hidden" name="id" value="'.esc_attr($r->id).'"><button class="button" name="action" value="'.($trash?'restore':'trash').'">'.($trash?'Khôi phục':'Xóa').'</button></form>';
+        } elseif (!$trash) echo '<p class="description">Chỉ xóa đơn đã hủy hoặc hết hạn.</p>';
         echo '</td></tr>';
     }
     echo '</tbody></table><p>';
