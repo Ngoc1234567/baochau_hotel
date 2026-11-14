@@ -13,6 +13,7 @@ function bch_install() {
  area int(11) NOT NULL DEFAULT 25,
  bed varchar(190) NOT NULL DEFAULT '',
  price bigint(20) NOT NULL DEFAULT 0,
+ hourly_price bigint(20) NOT NULL DEFAULT 0,
  rates longtext NOT NULL,
  closed longtext NOT NULL,
  images longtext NOT NULL,
@@ -28,8 +29,14 @@ function bch_install() {
  fingerprint varchar(64) NOT NULL,
  room_id bigint(20) unsigned NOT NULL,
  room_name varchar(190) NOT NULL,
+ requested_room_id bigint(20) unsigned NOT NULL DEFAULT 0,
+ requested_room_name varchar(190) NOT NULL DEFAULT '',
+ upgrade_accepted tinyint(1) NOT NULL DEFAULT 0,
  checkin date NOT NULL,
  checkout date NOT NULL,
+ stay_type varchar(20) NOT NULL DEFAULT 'overnight',
+ starts_at datetime DEFAULT NULL,
+ ends_at datetime DEFAULT NULL,
  guests int(11) NOT NULL,
  name varchar(190) NOT NULL,
  phone varchar(40) NOT NULL,
@@ -43,6 +50,11 @@ function bch_install() {
  created_at datetime NOT NULL,
  confirmed_at datetime DEFAULT NULL,
  confirmed_by bigint(20) unsigned DEFAULT NULL,
+ checked_in_at datetime DEFAULT NULL,
+ checked_in_by bigint(20) unsigned DEFAULT NULL,
+ balance_paid bigint(20) NOT NULL DEFAULT 0,
+ source varchar(20) NOT NULL DEFAULT 'website',
+ created_by bigint(20) unsigned DEFAULT NULL,
  mail_sent tinyint(1) NOT NULL DEFAULT 0,
  PRIMARY KEY  (id),
  UNIQUE KEY request_key (request_key),
@@ -54,8 +66,10 @@ function bch_install() {
         if (!$status || strtolower($status->Engine)!=='innodb') wp_die('Bảng đặt phòng cần InnoDB. Hãy kiểm tra database trước khi kích hoạt.');
     }
     if (!get_option('bch_seeded')) {
-        foreach ([['Superior Garden',650000,2,25,'1 giường đôi'],['Deluxe Balcony',950000,2,32,'1 giường King'],['Family Suite',1450000,4,45,'2 giường đôi']] as $d) {
-            $wpdb->insert($r,['name'=>$d[0],'price'=>$d[1],'capacity'=>$d[2],'area'=>$d[3],'bed'=>$d[4],'quantity'=>3,'rates'=>'{}','closed'=>'[]','images'=>'[]','description'=>'Không gian nghỉ ngơi thoáng đãng với sắc gỗ ấm áp. Nội dung và giá minh họa, cần thay bằng thông tin khách sạn thực tế.','amenities'=>'Wi-Fi, Điều hòa, Phòng tắm riêng, Bàn làm việc']);
+        foreach (bch_tariffs() as $d) {
+            $d['hourly_price']=$d['hourly'];
+            unset($d['hourly']);
+            $wpdb->insert($r,array_merge($d,['quantity'=>0,'area'=>0,'rates'=>'{}','closed'=>'[]','images'=>'[]','description'=>'Ảnh, diện tích và tiện nghi đang được cập nhật. Vui lòng liên hệ lễ tân để biết thêm thông tin.','amenities'=>'']));
         }
         update_option('bch_seeded',1);
     }
@@ -63,7 +77,14 @@ function bch_install() {
     if (!get_option('bch_policy_page')) update_option('bch_policy_page',wp_insert_post(['post_title'=>'Chính sách đặt cọc','post_name'=>'chinh-sach-dat-coc','post_content'=>'[baochau_policy]','post_status'=>'publish','post_type'=>'page']));
     get_role('administrator')->add_cap('bch_manage_bookings');
     add_role('bch_reception','Lễ tân',['read'=>true,'bch_manage_bookings'=>true]);
-    update_option('bch_schema','1');
+    if ($wpdb->last_error) throw new RuntimeException('Không cập nhật được cấu trúc đặt phòng.');
+    if (!get_option('bch_hourly_prices_v1')) {
+        foreach (bch_tariffs() as $tariff) {
+            if ($wpdb->query($wpdb->prepare("UPDATE $r SET hourly_price=%d WHERE name=%s AND hourly_price=0",$tariff['hourly'],$tariff['name']))===false) throw new RuntimeException('Không cập nhật được giá nghỉ giờ.');
+        }
+        update_option('bch_hourly_prices_v1',1);
+    }
+    update_option('bch_schema','5');
 }
 /** All inventory writes share this DB advisory lock and transaction. */
 function bch_atomic($fn) {
@@ -79,16 +100,13 @@ function bch_atomic($fn) {
 }
 function bch_expire_rows() { global $wpdb; if ($wpdb->query('UPDATE '.bch_table('bookings')." SET status='expired' WHERE status='pending' AND expires_at <= UTC_TIMESTAMP()")===false) throw new RuntimeException('Không cập nhật được hạn giữ chỗ.'); }
 function bch_expire() { try { bch_atomic('bch_expire_rows'); } catch (Throwable $e) { error_log('BCH: expiration failed'); } }
-function bch_rooms() { global $wpdb; return $wpdb->get_results('SELECT * FROM '.bch_table('rooms').' ORDER BY price,id'); }
-function bch_room($id) { global $wpdb; return $wpdb->get_row($wpdb->prepare('SELECT * FROM '.bch_table('rooms').' WHERE id=%d',$id)); }
+function bch_rooms($include_retired=false) { global $wpdb; $rows=$wpdb->get_results('SELECT * FROM '.bch_table('rooms').' ORDER BY price,id'); $retired=array_map('intval',array_merge(get_option('bch_retired_rooms',[]),get_option('bch_deleted_rooms',[]))); return $include_retired ? $rows : array_values(array_filter($rows,fn($r)=>!in_array((int)$r->id,$retired,true))); }
+function bch_room($id,$include_retired=false) { if (!$include_retired && in_array((int)$id,array_map('intval',array_merge(get_option('bch_retired_rooms',[]),get_option('bch_deleted_rooms',[]))),true)) return null; global $wpdb; return $wpdb->get_row($wpdb->prepare('SELECT * FROM '.bch_table('rooms').' WHERE id=%d',$id)); }
 function bch_available($room,$days) {
-    global $wpdb; $min=(int)$room->quantity;
-    foreach ($days as $day) {
-        $used=$wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM '.bch_table('bookings')." WHERE room_id=%d AND checkin<=%s AND checkout>%s AND (status='confirmed' OR (status='pending' AND expires_at>UTC_TIMESTAMP()))",$room->id,$day,$day));
-        if ($wpdb->last_error) throw new RuntimeException('Không đọc được tồn phòng.');
-        $min=min($min,$room->quantity-(int)$used);
-    }
-    return max(0,$min);
+    if (!$days) return 0;
+    $start=reset($days).' 13:00:00';
+    $end=(new DateTimeImmutable(end($days)))->modify('+1 day')->format('Y-m-d').' 12:00:00';
+    return bch_available_interval($room,$start,$end);
 }
 function bch_customer_phone($phone) {
     $phone=preg_replace('/\D/','',$phone);
@@ -97,23 +115,39 @@ function bch_customer_phone($phone) {
     return $phone;
 }
 function bch_duplicate_booking($email,$phone,$in,$out) {
-    global $wpdb;
-    $rows=$wpdb->get_results($wpdb->prepare('SELECT * FROM '.bch_table('bookings')." WHERE checkin<%s AND checkout>%s AND (status='confirmed' OR (status='pending' AND expires_at>UTC_TIMESTAMP()))",$out,$in));
-    if ($wpdb->last_error) throw new RuntimeException('Không kiểm tra được đơn hiện có. Vui lòng thử lại.');
-    foreach ($rows as $row) if (strcasecmp(trim($row->email),trim($email))===0 || bch_customer_phone($row->phone)===bch_customer_phone($phone)) return $row;
+    $start=strlen($in)===10?$in.' 13:00:00':$in;
+    $end=strlen($out)===10?$out.' 12:00:00':$out;
+    $rows=bch_overlap_rows($start,$end);
+    foreach ($rows as $row) if ((trim($email)!=='' && strcasecmp(trim($row->email),trim($email))===0) || bch_customer_phone($row->phone)===bch_customer_phone($phone)) return $row;
     return null;
 }
 function bch_owned_booking($row) {
     $token=$_COOKIE['bch_booking_access']??'';
     return is_string($token) && preg_match('/^[a-f0-9]{64}$/',$token) && hash_equals($row->token_hash,hash('sha256',$token));
 }
-function bch_hold($data) {
-    if (!bch_ready()) throw new RuntimeException('Chưa mở nhận giữ chỗ. Vui lòng liên hệ khách sạn.');
-    $days=bch_dates($data['in'],$data['out']);
+function bch_hold($data,$at_counter=false) {
+    if ($at_counter && !current_user_can('bch_manage_bookings')) throw new RuntimeException('Bạn không có quyền tạo đơn tại quầy.');
+    if (!$at_counter && ($data['stay_type']??'overnight')!=='overnight') throw new InvalidArgumentException('Nghỉ giờ chỉ được tạo tại quầy.');
+    $stay=bch_stay($data);
+    $data['in']=$stay['in']; $data['out']=$stay['out'];
+    $initial_status=$at_counter?($data['initial_status']??'checked_in'):'pending';
+    if (!in_array($initial_status,['pending','confirmed','checked_in'],true)) throw new InvalidArgumentException('Trạng thái tạo đơn không hợp lệ.');
+    if ($at_counter && $initial_status==='checked_in' && $data['in']!==wp_date('Y-m-d',null,new DateTimeZone('Asia/Ho_Chi_Minh'))) throw new InvalidArgumentException('Đơn nhận phòng ngay phải có ngày nhận là hôm nay.');
+    if ($at_counter && $initial_status==='checked_in' && $stay['type']==='hourly') {
+        $local_now=wp_date('Y-m-d H:i:s',null,new DateTimeZone('Asia/Ho_Chi_Minh'));
+        if ($stay['start']>$local_now || $stay['end']<=$local_now) throw new InvalidArgumentException('Nhận phòng ngay cần khung giờ đang diễn ra. Chọn đặt trước nếu khách chưa đến.');
+    }
+    if (!$at_counter && !bch_ready()) throw new RuntimeException('Chưa mở nhận giữ chỗ. Vui lòng liên hệ khách sạn.');
+    $days=$stay['days'];
     if (!preg_match('/^[a-f0-9]{64}$/',$data['key']) || !preg_match('/^[a-f0-9]{64}$/',$data['token'])) throw new InvalidArgumentException('Phiên giữ chỗ không hợp lệ.');
-    if (!$data['name'] || strlen($data['name'])>190 || !is_email($data['email']) || strlen($data['email'])>190 || !preg_match('/^[+0-9 ()-]{8,25}$/',$data['phone'])) throw new InvalidArgumentException('Vui lòng nhập đúng họ tên, điện thoại và email.');
-    $fingerprint=hash('sha256',wp_json_encode([$data['room'],$data['in'],$data['out'],$data['guests'],$data['name'],$data['phone'],$data['email']]));
-    return bch_atomic(function () use ($data,$days,$fingerprint) {
+    if (!$data['name'] || strlen($data['name'])>190 || ((!$at_counter || $data['email']!=='') && !is_email($data['email'])) || strlen($data['email'])>190 || !preg_match('/^[+0-9 ()-]{8,25}$/',$data['phone'])) throw new InvalidArgumentException('Vui lòng nhập đúng họ tên, điện thoại và email.');
+    $data['room']=(int)$data['room'];
+    $allocated_id=(int)($data['allocated_room']??$data['room']);
+    $accepted=!empty($data['upgrade_consent']);
+    $fingerprint=hash('sha256',wp_json_encode([$data['room'],$data['in'],$data['out'],$data['guests'],$data['name'],$data['phone'],$data['email'],$allocated_id,$accepted]));
+    $fingerprint=hash('sha256',$fingerprint.'|'.$stay['type'].'|'.$stay['start'].'|'.$stay['end']);
+    if ($at_counter) $fingerprint=hash('sha256',$fingerprint.'|counter|'.get_current_user_id().'|'.$initial_status.'|'.($data['paid']??'').'|'.(!empty($data['payment_verified'])?'1':'0'));
+    return bch_atomic(function () use ($data,$days,$fingerprint,$allocated_id,$accepted,$at_counter,$initial_status,$stay) {
         global $wpdb; $b=bch_table('bookings');
         bch_expire_rows();
         $existing=$wpdb->get_row($wpdb->prepare("SELECT * FROM $b WHERE request_key=%s",$data['key']));
@@ -121,29 +155,41 @@ function bch_hold($data) {
             if (!hash_equals($existing->fingerprint,$fingerprint) || !hash_equals($existing->token_hash,hash('sha256',$data['token']))) throw new RuntimeException('Yêu cầu đã dùng cho thông tin khác. Hãy tìm phòng lại.');
             return $existing;
         }
-        $duplicate=bch_duplicate_booking($data['email'],$data['phone'],$data['in'],$data['out']);
+        $duplicate=bch_duplicate_booking($data['email'],$data['phone'],$stay['start'],$stay['end']);
         if ($duplicate) {
-            if (bch_owned_booking($duplicate)) return $duplicate;
+            if (!$at_counter && bch_owned_booking($duplicate)) return $duplicate;
             throw new RuntimeException('Thông tin liên hệ này đã có đơn cho kỳ nghỉ trùng ngày. Vui lòng mở đơn trên trình duyệt đã đặt hoặc liên hệ lễ tân để kiểm tra; không cần tạo đơn hay chuyển cọc thêm.');
         }
         $room=bch_room($data['room']);
         if (!$room) throw new InvalidArgumentException('Không tìm thấy hạng phòng.');
-        $quote=bch_price($room,$days,$data['guests']);
+        $quote=bch_stay_price($room,$stay,$data['guests']);
         if ($quote['total'] !== (int)$data['quoted']) throw new RuntimeException('Giá đã thay đổi. Vui lòng tìm phòng lại để xem giá mới.');
-        if (bch_available($room,$days)<1) throw new RuntimeException('Phòng vừa hết chỗ. Vui lòng chọn hạng khác.');
+        $allocated=bch_stay_allocation($room,$stay,$data['guests']);
+        $upgraded=(int)$allocated->id!==(int)$room->id;
+        if ((int)$allocated->id!==$allocated_id) throw new RuntimeException('Tình trạng phòng đã thay đổi. Vui lòng kiểm tra phòng lại để xem và đồng ý phương án bố trí mới.');
+        if ($upgraded && !$accepted) throw new RuntimeException('Vui lòng đồng ý đổi sang phòng lớn hơn, giữ nguyên giá trước khi giữ chỗ.');
+        $paid=$at_counter?($data['paid']??null):0;
+        $required_paid=$initial_status==='checked_in'?$quote['total']:($initial_status==='confirmed'?$quote['deposit']:0);
+        if ($at_counter && (!is_numeric($paid) || (float)$paid!==(float)$required_paid)) throw new InvalidArgumentException('Số tiền đã thu phải bằng '.bch_money($required_paid).' cho trạng thái đã chọn.');
+        if ($at_counter && $required_paid>0 && empty($data['payment_verified'])) throw new RuntimeException('Vui lòng xác nhận đã thực thu số tiền trên.');
         $s=bch_settings(); $code='BC'.strtoupper(bin2hex(random_bytes(6)));
         $now=strtotime($wpdb->get_var('SELECT UTC_TIMESTAMP()').' UTC');
-        $ok=$wpdb->insert($b,['code'=>$code,'token_hash'=>hash('sha256',$data['token']),'request_key'=>$data['key'],'fingerprint'=>$fingerprint,'room_id'=>$room->id,'room_name'=>$room->name,'checkin'=>$data['in'],'checkout'=>$data['out'],'guests'=>$data['guests'],'name'=>$data['name'],'phone'=>$data['phone'],'email'=>$data['email'],'total'=>$quote['total'],'deposit'=>$quote['deposit'],'nightly'=>wp_json_encode($quote['nightly']),'bank'=>wp_json_encode(array_intersect_key($s,array_flip(['bank','holder','account','qr_url']))),'status'=>'pending','expires_at'=>gmdate('Y-m-d H:i:s',$now+max(1,min(48,(int)$s['hours']))*3600),'created_at'=>gmdate('Y-m-d H:i:s',$now)]);
+        $ok=$wpdb->insert($b,['code'=>$code,'token_hash'=>hash('sha256',$data['token']),'request_key'=>$data['key'],'fingerprint'=>$fingerprint,'room_id'=>$allocated->id,'room_name'=>$allocated->name,'requested_room_id'=>$room->id,'requested_room_name'=>$room->name,'upgrade_accepted'=>$upgraded?1:0,'checkin'=>$data['in'],'checkout'=>$data['out'],'stay_type'=>$stay['type'],'starts_at'=>$stay['start'],'ends_at'=>$stay['end'],'guests'=>$data['guests'],'name'=>$data['name'],'phone'=>$data['phone'],'email'=>$data['email'],'total'=>$quote['total'],'deposit'=>($at_counter && $initial_status==='checked_in'?0:$quote['deposit']),'nightly'=>wp_json_encode($quote['nightly']),'bank'=>wp_json_encode(array_intersect_key($s,array_flip(['bank','holder','account','qr_url']))),'source'=>$at_counter?'counter':'website','created_by'=>$at_counter?get_current_user_id():null,'status'=>$initial_status,'confirmed_at'=>$initial_status!=='pending'?gmdate('Y-m-d H:i:s',$now):null,'confirmed_by'=>$initial_status!=='pending'?get_current_user_id():null,'checked_in_at'=>$initial_status==='checked_in'?gmdate('Y-m-d H:i:s',$now):null,'checked_in_by'=>$initial_status==='checked_in'?get_current_user_id():null,'balance_paid'=>$initial_status==='checked_in'?$quote['total']:0,'expires_at'=>gmdate('Y-m-d H:i:s',$now+max(1,min(48,(int)$s['hours']))*3600),'created_at'=>gmdate('Y-m-d H:i:s',$now)]);
         if (!$ok) throw new RuntimeException('Không lưu được đơn. Vui lòng thử lại.');
         return $wpdb->get_row($wpdb->prepare("SELECT * FROM $b WHERE id=%d",$wpdb->insert_id));
     });
 }
-function bch_transition($id,$action) {
-    return bch_atomic(function () use ($id,$action) {
+function bch_transition($id,$action,$balance_verified=false) {
+    return bch_atomic(function () use ($id,$action,$balance_verified) {
         global $wpdb; bch_expire_rows(); $b=bch_table('bookings');
         $row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $b WHERE id=%d",$id));
         if (!$row) throw new RuntimeException('Không tìm thấy đơn.');
         if ($action==='confirm' && $row->status==='pending') $changes=['status'=>'confirmed','confirmed_at'=>gmdate('Y-m-d H:i:s'),'confirmed_by'=>get_current_user_id()];
+        elseif ($action==='checkin' && $row->status==='confirmed') {
+            if (!$balance_verified) throw new RuntimeException('Cần xác nhận đã thu đủ số tiền phòng còn lại.');
+            if (!current_user_can('bch_manage_bookings')) throw new RuntimeException('Bạn không có quyền xác nhận nhận phòng.');
+            $changes=['status'=>'checked_in','checked_in_at'=>gmdate('Y-m-d H:i:s'),'checked_in_by'=>get_current_user_id(),'balance_paid'=>max(0,(int)$row->total-(int)$row->deposit)];
+        }
         elseif ($action==='cancel' && in_array($row->status,['pending','confirmed'],true)) $changes=['status'=>'cancelled'];
         else return false;
         if ($action==='confirm') {
@@ -154,12 +200,16 @@ function bch_transition($id,$action) {
         return $wpdb->get_row($wpdb->prepare("SELECT * FROM $b WHERE id=%d",$id));
     });
 }
+function bch_balance_due($r) { return max(0,(int)$r->total-(int)$r->deposit-(int)($r->balance_paid??0)); }
 function bch_receipt_text($r) {
     $bank=json_decode($r->bank,true); $tz=new DateTimeZone('Asia/Ho_Chi_Minh');
-    return "Mã: $r->code\nTrạng thái: ".bch_status($r->status)."\nPhòng: $r->room_name\nNgày ở: $r->checkin → $r->checkout\nTổng: ".bch_money($r->total)."\nCọc 30%: ".bch_money($r->deposit)."\nCòn lại: ".bch_money($r->total-$r->deposit)."\nNgân hàng: {$bank['bank']}\nChủ tài khoản: {$bank['holder']}\nSố tài khoản: {$bank['account']}\nNội dung chuyển khoản: $r->code\nHạn giữ chỗ: ".wp_date('d/m/Y H:i',strtotime($r->expires_at.' UTC'),$tz)." (giờ Việt Nam)\n".BCH_POLICY."\n".bch_settings()['contact'];
+    $upgrade=bch_upgrade_description($r);
+    $stay_text=bch_stay_label($r);
+    if ($r->status==='checked_in') return "$upgrade\nMã: $r->code\nTrạng thái: Đã nhận phòng\nPhòng: $r->room_name\n$stay_text\nTổng tiền phòng: ".bch_money($r->total)."\nĐã thu đủ tiền phòng.\nThu khi nhận phòng: ".bch_money($r->balance_paid)."\nCòn lại: ".bch_money(bch_balance_due($r))."\nNhận phòng lúc: ".wp_date('d/m/Y H:i',strtotime($r->checked_in_at.' UTC'),$tz)." (giờ Việt Nam)\n".bch_settings()['contact'];
+    return "$upgrade\nMã: $r->code\nTrạng thái: ".bch_status($r->status)."\nPhòng: $r->room_name\n$stay_text\nTổng: ".bch_money($r->total)."\nCọc 30%: ".bch_money($r->deposit)."\nCòn lại: ".bch_money(bch_balance_due($r))."\nNgân hàng: {$bank['bank']}\nChủ tài khoản: {$bank['holder']}\nSố tài khoản: {$bank['account']}\nNội dung chuyển khoản: $r->code\nHạn giữ chỗ: ".wp_date('d/m/Y H:i',strtotime($r->expires_at.' UTC'),$tz)." (giờ Việt Nam)\n".BCH_POLICY."\n".bch_settings()['contact'];
 }
 function bch_mail($r) {
-    if (!bch_settings()['mail']) return;
+    if (!bch_settings()['mail'] || !is_email($r->email)) return;
     global $wpdb;
     $sent=wp_mail($r->email,'Đặt phòng '.$r->code.' — '.bch_status($r->status),bch_receipt_text($r));
     $wpdb->update(bch_table('bookings'),['mail_sent'=>$sent?1:0],['id'=>$r->id]);
