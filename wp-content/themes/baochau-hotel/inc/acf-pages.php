@@ -69,7 +69,7 @@ function bch_acf_groups() {
     }
     $groups[]=['key'=>'group_bch_services','title'=>'Bảo Châu — 6 thẻ tiện ích (ACF miễn phí)','fields'=>$services,'location'=>[[['param'=>'page_template','operator'=>'==','value'=>'page-tien-ich.php']]]];
     $groups[]=['key'=>'group_bch_contact','title'=>'Bảo Châu — Thông tin liên hệ','fields'=>[
-        $f('bch_contact_address','Địa chỉ','textarea'),$f('bch_contact_phone','Điện thoại'),
+        $f('bch_contact_address','Địa chỉ','textarea'),$f('bch_contact_phone','Điện thoại lễ tân','textarea',['instructions'=>'Mỗi số một dòng hoặc ngăn cách bằng dấu chấm phẩy.']),
         $f('bch_contact_email','Email','email'),$f('bch_contact_map','Liên kết Google Maps','url'),
         $f('bch_contact_side_title','Tiêu đề khung tư vấn'),$f('bch_contact_side_text','Nội dung tư vấn','textarea'),
         $f('bch_contact_button','Chữ nút đặt phòng'),

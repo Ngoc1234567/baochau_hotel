@@ -109,6 +109,7 @@ function bch_booking_screen() {
                     bch_availability_card($room,$state,$in,$out,$guests,count($days));
                 }
                 echo '</div>'; if (!$found) echo '<p role="status">Không còn phòng phù hợp. Hãy đổi ngày hoặc số khách.</p>';
+                bch_reservation_form(['in'=>$in,'out'=>$out,'guests'=>$guests]);
             }
         } else echo '<p>Chọn ngày để kiểm tra phòng trống và tổng tiền cho toàn bộ kỳ nghỉ.</p>';
     } catch (Throwable $e) {
@@ -125,7 +126,7 @@ function bch_checkout($room,$q,$in,$out,$guests,$guest=[]) {
     $upgraded=(int)$allocated->id!==(int)$room->id;
     if ($upgraded) bch_upgrade_notice($room,$allocated,$q,$guests);
     echo '<p class="notice">'.esc_html(bch_stay_note()).'</p>';
-    echo '<div class="checkout"><section><p class="eyebrow">KỲ NGHỈ CỦA BẠN</p><h2>'.esc_html($room->name).'</h2><p>'.esc_html($in.' → '.$out).' · '.esc_html($guests).' khách</p><details><summary>Chi tiết giá từng đêm</summary><ul>';
+    echo '<div id="thong-tin-dat-phong" class="checkout"><section><p class="eyebrow">KỲ NGHỈ CỦA BẠN</p><h2>'.esc_html($room->name).'</h2><p>'.esc_html($in.' → '.$out).' · '.esc_html($guests).' khách</p><details><summary>Chi tiết giá từng đêm</summary><ul>';
     foreach ($q['nightly'] as $day=>$price) echo '<li>'.esc_html($day).' — '.esc_html(bch_money($price)).'</li>';
     echo '</ul></details><p>Tổng tiền phòng <strong>'.esc_html(bch_money($q['total'])).'</strong></p><p>Cọc 30% <strong>'.esc_html(bch_money($q['deposit'])).'</strong></p><p>Còn lại '.esc_html(bch_money($q['total']-$q['deposit'])).'</p><p>Thời hạn giữ chỗ: '.esc_html(bch_settings()['hours']).' giờ kể từ khi tạo đơn.</p></section><form method="post" class="guest-form">';
     wp_nonce_field('bch_hold');
@@ -136,14 +137,14 @@ function bch_checkout($room,$q,$in,$out,$guests,$guest=[]) {
 }
 function bch_reservation_form($values=[],$collapsed=false,$compact=false) {
     bch_recent_booking_links();
-    if (!array_filter(bch_rooms(),fn($room)=>(int)$room->quantity>0)) { echo '<p class="notice">Các hạng phòng chưa mở đặt online. Vui lòng liên hệ lễ tân để kiểm tra phòng trống.</p>'; return; }
+    if (!array_filter(bch_rooms(),fn($room)=>(int)$room->quantity>0)) { echo '<p id="thong-tin-dat-phong" class="notice">Các hạng phòng chưa mở đặt online. Vui lòng liên hệ lễ tân để kiểm tra phòng trống.</p>'; return; }
     $v=wp_parse_args($values,['name'=>'','phone'=>'','email'=>'','in'=>'','out'=>'','guests'=>2,'room'=>0]);
     $fixed_room=$compact?bch_room(absint($v['room'])):null;
     if ($fixed_room) $v['guests']=min((int)$fixed_room->capacity,max(1,(int)$v['guests']));
     [$v['in'],$v['out'],$today,$next]=bch_form_dates($v['in'],$v['out']);
     if ($collapsed) echo '<details class="booking-edit"><summary>Thay đổi ngày ở hoặc hạng phòng</summary>';
     ?>
-    <div class="reservation-layout<?php echo $compact?' reservation-compact':''; ?>">
+    <div <?php if (!$collapsed && !$compact) echo 'id="thong-tin-dat-phong"'; ?> class="reservation-layout<?php echo $compact?' reservation-compact':''; ?>">
         <section class="reservation-main" aria-label="Thông tin đặt phòng">
             <?php if (!$compact): ?>
             <p class="booking-step">BƯỚC 1 / 2 · THÔNG TIN ĐẶT PHÒNG</p>
