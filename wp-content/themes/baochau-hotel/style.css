@@ -117,7 +117,7 @@ input[type=checkbox]{width:24px;height:24px;vertical-align:middle;margin:0 10px 
 .content-page .reservation-aside h2{font-size:30px}
 .nav a[aria-current=page]{color:var(--gold-text);text-decoration:underline;text-underline-offset:8px}
 .nav .current-menu-item>a,.nav .current_page_item>a{color:var(--gold-text);text-decoration:underline;text-underline-offset:8px}
-@media(min-width:981px){.nav{gap:18px}.header-inner{gap:22px}}
+@media(min-width:981px){.nav{gap:28px}.nav ul{gap:32px;margin:0}.header-inner{gap:22px}}
 @media(max-width:680px){.about-page-layout,.contact-page-layout{grid-template-columns:minmax(0,1fr);gap:28px}.content-page-heading{padding:0 0 22px;margin-bottom:24px}.editor-content{font-size:16px}.content-page .button{width:100%}}
 .screen-reader-text{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 .room-detail-page{padding-top:24px}
@@ -290,3 +290,74 @@ button,.button,.card-actions>a,.card-actions .button{font-size:18px}
 .room-card .stock-closed, .stock-closed { color: #755012; background: #fff3d7; }
 .room-card .stock-unknown, .stock-unknown, .stock-unsuitable { color: #59534a; background: #f1efea; }
 .room-card .stock-upgrade, .stock-upgrade { color: #795716; font-size: 13px; }
+
+/* Artwork banners already contain their own title and description. */
+.hero.hero--artwork{display:block;min-height:0;width:100%;height:clamp(380px,38vw,660px);margin:0;border-radius:0 0 16px 16px;background:var(--cream);color:var(--ink)}
+.hero--artwork::after{display:none}
+.hero--artwork .hero-image{position:static;display:block;width:100%;height:100%;object-fit:cover;object-position:center 35%}
+.hero--artwork .hero-content{position:absolute;left:max(5%,calc((100% - 1200px)/2));right:5%;bottom:28px;width:auto;margin:0;padding:0}
+.hero--artwork .hero-content>p,.hero--artwork .hero-content>h1{display:none}
+.hero--artwork .hero-links{margin:0;flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.hero--artwork .button.light{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.hero--artwork .button.light:hover{background:#dfbc78}
+.hero--artwork+.search-shell{margin-top:24px}
+.screen-reader-text{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:680px){
+  .hero.hero--artwork{width:100%;height:auto;margin:0;border-radius:0 0 12px 12px}
+  .hero--artwork .hero-image{height:auto}
+  .hero--artwork .hero-content{left:5%;right:5%;bottom:4%;padding:0}
+  .hero--artwork .hero-links .button{width:auto;min-height:36px;padding:7px 12px;font-size:12px}
+  .hero--artwork+.search-shell{margin-top:16px}
+}
+/* Give each homepage section a clear boundary and visual rhythm. */
+.home-main .home-search-band{padding:32px 0 40px;background:#fff;border-bottom:1px solid var(--line)}
+.home-main .home-search-band .search-shell{margin-top:0}
+.home-main .home-search-band h2{margin:0 0 18px;font-size:24px;line-height:1.35}
+.home-main .home-search-band .booking-search{box-shadow:0 6px 24px #3a281e08}
+.home-main .home-intro-band{background:#f5efe5;border-bottom:1px solid #e7ddcf}
+.home-main section.section{padding-top:72px;padding-bottom:72px}
+.home-main .intro-note{background:#fff;padding:28px 32px;border:1px solid #e7ddcf;border-left:3px solid var(--gold);border-radius:0 10px 10px 0}
+.home-main .intro-note p{margin-top:0}
+.home-main .home-rooms .section-head{padding-bottom:24px;border-bottom:1px solid var(--line);margin-bottom:24px}
+.home-main .home-rooms .inventory-summary{padding:16px 20px;margin-bottom:28px;background:#f8f5ef;border:1px solid var(--line);border-radius:8px}
+.home-main .home-rooms .room-card{box-shadow:0 5px 18px #3a281e08}
+.home-main .services{background:#f5efe5;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.home-main .service-grid{margin-top:32px;gap:24px}
+.home-main .service{padding:24px;background:#fff;border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:8px}
+.home-main .service h3{font-size:24px}
+.home-main .service p{margin-bottom:0}
+.home-main .contact-section{margin-top:48px;border-top:4px solid var(--gold)}
+@media(max-width:680px){
+  .home-main .home-search-band{padding:24px 0 32px}
+  .home-main .home-search-band h2{font-size:22px}
+  .home-main section.section{padding-top:44px;padding-bottom:44px}
+  .home-main .intro-note{padding:22px}
+  .home-main .home-rooms .section-head{padding-bottom:18px}
+  .home-main .service-grid{gap:16px}
+  .home-main .service{padding:18px}
+  .home-main .service h3{font-size:22px}
+  .home-main .contact-section{margin-top:28px}
+}
+/* Homepage motion follows the gentle reveal rhythm of the DP reference. */
+@media(prefers-reduced-motion:no-preference){
+  .home-motion .home-reveal{opacity:0;translate:0 24px;transition:opacity 650ms ease var(--reveal-delay,0ms),translate 650ms cubic-bezier(.2,.65,.3,1) var(--reveal-delay,0ms)}
+  .home-motion .home-reveal.is-revealed{opacity:1;translate:0 0}
+  .home-motion .hero-image{animation:bch-banner-in 1100ms ease-out both}
+  .home-motion .hero-links{animation:bch-copy-in 700ms cubic-bezier(.2,.65,.3,1) 240ms both}
+  .home-motion .button{transition:transform 200ms ease,box-shadow 200ms ease,background-color 200ms ease}
+  .home-motion .button:hover{transform:translateY(-2px);box-shadow:0 6px 16px #3a281e24}
+  .home-motion .room-card,.home-motion .service{transition:opacity 650ms ease var(--reveal-delay,0ms),translate 650ms cubic-bezier(.2,.65,.3,1) var(--reveal-delay,0ms),transform 250ms ease,box-shadow 250ms ease,border-color 250ms ease}
+  .home-motion .room-card:focus-within{transform:translateY(-4px);box-shadow:0 12px 28px #3a281e18;border-color:var(--gold)}
+  @keyframes bch-banner-in{from{opacity:.6;transform:scale(1.025)}to{opacity:1;transform:scale(1)}}
+  @keyframes bch-copy-in{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+}
+@media(prefers-reduced-motion:no-preference) and (hover:hover){
+  .home-motion .room-card:hover,.home-motion .service:hover{transform:translateY(-4px);box-shadow:0 12px 28px #3a281e18;border-color:var(--gold)}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .home-motion .home-reveal{opacity:1;translate:none;transition:none}
+}
+@media print{
+  .home-motion .home-reveal{opacity:1;translate:none}
+}

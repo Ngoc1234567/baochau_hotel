@@ -51,3 +51,39 @@ document.querySelectorAll('.booking-search, .reservation-form').forEach(form => 
   checkin.addEventListener('change', update);
   update();
 });
+
+// Reveal homepage content once, with a short stagger within each group.
+(() => {
+  const scope = document.querySelector('.home-main');
+  if (!scope) return;
+  const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+  scope.classList.add('home-motion');
+  if (preference.matches || !('IntersectionObserver' in window)) return;
+
+  const targets = [...scope.querySelectorAll('.home-search-band h2, .booking-search, .intro > div, .section-head, .inventory-summary, .room-card, .services > .wrap > .eyebrow, .services > .wrap > h2, .service, .hotel-photo, .contact-art, .contact-copy')];
+  const reveal = target => {
+    target.classList.add('is-revealed');
+    observer.unobserve(target);
+  };
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(({ target, isIntersecting }) => {
+      if (isIntersecting) reveal(target);
+    });
+  }, { threshold: 0.08 });
+  targets.forEach(target => {
+    const siblings = [...target.parentElement.children];
+    target.style.setProperty('--reveal-delay', `${(siblings.indexOf(target) % 4) * 70}ms`);
+    target.classList.add('home-reveal');
+    observer.observe(target);
+  });
+  scope.addEventListener('focusin', event => {
+    const target = event.target.closest('.home-reveal');
+    if (target) reveal(target);
+  });
+  preference.addEventListener('change', ({ matches }) => {
+    if (matches) {
+      targets.forEach(reveal);
+      observer.disconnect();
+    }
+  });
+})();

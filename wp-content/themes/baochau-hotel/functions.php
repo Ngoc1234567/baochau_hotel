@@ -7,8 +7,8 @@ require_once __DIR__.'/inc/acf-pages.php';
 add_action('after_setup_theme',function () { add_theme_support('title-tag'); add_theme_support('custom-logo'); add_theme_support('post-thumbnails'); add_theme_support('html5',['search-form','gallery','caption','style','script']); register_nav_menus(['primary'=>'Menu chính']); });
 add_action('wp_enqueue_scripts',function () {
     wp_enqueue_style('baochau-fonts','https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap',[],null);
-    wp_enqueue_style('baochau',get_stylesheet_uri(),['baochau-fonts'],'1.2.7');
-    wp_enqueue_script('baochau',get_template_directory_uri().'/assets/site.js',[],'1.0.6',true);
+    wp_enqueue_style('baochau',get_stylesheet_uri(),['baochau-fonts'],'1.2.17');
+    wp_enqueue_script('baochau',get_template_directory_uri().'/assets/site.js',[],'1.0.7',true);
 });
 add_filter('document_title_parts',function ($parts) { if (isset($_GET['room_detail']) && function_exists('bch_room')) { $room=bch_room(absint($_GET['room_detail'])); if ($room) $parts['title']=$room->name; } return $parts; });
 add_filter('body_class',function ($classes) { if (is_page((int)get_option('bch_booking_page'))) $classes[]='hotel-booking-page'; return $classes; });
@@ -26,7 +26,7 @@ add_action('customize_register',function ($c) {
     $c->add_control(new WP_Customize_Media_Control($c,'bch_contact_photo',['label'=>'Ảnh khách sạn trong phần liên hệ','section'=>'bch_brand','mime_type'=>'image']));
     }
     $c->add_setting('bch_demo',['default'=>true,'sanitize_callback'=>function ($v) { return (bool)$v; }]);
-    $c->add_control('bch_demo',['label'=>'Hiện nhãn demo (chỉ tắt sau khi thay nội dung thật)','section'=>'bch_brand','type'=>'checkbox']);
+    $c->add_control('bch_demo',['label'=>'Hiện ghi chú nội dung','section'=>'bch_brand','type'=>'checkbox']);
 });
 function bch_theme_booking($args=[]) { return function_exists('bch_url')?bch_url($args):home_url('/#phong'); }
 function bch_theme_image($room=null) { $images=$room?(json_decode($room->images,true)?:[]):[]; return $images[0]??get_template_directory_uri().'/assets/room.svg'; }

@@ -42,5 +42,5 @@ function bch_page_heading($eyebrow) {
     if ($banner=absint(bch_field('bch_page_banner'))) echo wp_get_attachment_image($banner,'large',false,['class'=>'acf-page-banner','loading'=>'eager']);
 }
 function bch_page_demo_note() {
-    if (get_theme_mod('bch_demo',true)) echo '<p class="notice">Nội dung demo — thông tin và tiện ích cần được khách sạn cập nhật trước khi vận hành.</p>';
+
 }

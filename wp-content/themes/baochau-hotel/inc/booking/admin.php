@@ -43,11 +43,11 @@ function bch_admin_settings() {
         echo '<div class="notice notice-success"><p>Đã lưu cấu hình.</p></div>';
     }
     $s=bch_settings();
-    echo '<div class="wrap"><h1>Cấu hình đặt phòng</h1><p>Chỉ bật nhận giữ chỗ sau khi thay toàn bộ dữ liệu demo và kiểm tra tài khoản nhận tiền.</p><form method="post">'; wp_nonce_field('bch_settings');
+    echo '<div class="wrap"><h1>Cấu hình đặt phòng</h1><p>Chỉ bật nhận giữ chỗ sau khi thay toàn bộ dữ liệu mẫu và kiểm tra tài khoản nhận tiền.</p><form method="post">'; wp_nonce_field('bch_settings');
     foreach (['bank'=>'Ngân hàng','holder'=>'Chủ tài khoản','account'=>'Số tài khoản','contact'=>'Liên hệ lễ tân'] as $k=>$label) {
         echo '<p><label>'.esc_html($label).'<br><input class="regular-text" name="'.esc_attr($k).'" value="'.esc_attr($s[$k]).'"></label></p>';
     }
-    bch_admin_input('hours','Thời gian giữ chỗ (1–48 giờ; mặc định demo: 2)',$s['hours'],'number');
+    bch_admin_input('hours','Thời gian giữ chỗ (1–48 giờ; mặc định: 2)',$s['hours'],'number');
     echo '<p><label>Chính sách bổ sung<br><textarea name="policy" rows="6" cols="80">'.esc_textarea($s['policy']).'</textarea></label></p>';
     foreach (['free_upgrade'=>'Cho phép nâng hạng miễn phí khi hết phòng: 1 giường đôi → 2 giường đôi (khách phải đồng ý)','live'=>'Mở nhận giữ chỗ thật (đã kiểm tra ngân hàng và tồn phòng)','mail'=>'Gửi email (đã cấu hình SMTP và thử nhận thư)'] as $k=>$label) echo '<p><label><input type="checkbox" name="'.esc_attr($k).'" value="1" '.checked($s[$k],1,false).'>'.esc_html($label).'</label></p>';
     submit_button(); echo '</form></div>';
@@ -100,7 +100,7 @@ function bch_admin_rooms() {
             }
         } catch (Throwable $e) { bch_admin_error($e); }
     }
-    echo '<div class="wrap"><h1>Hạng phòng</h1><p>Chọn 3–5 ảnh cho mỗi hạng phòng từ thư viện hoặc tải ảnh mới. Ảnh đầu tiên là ảnh đại diện. Không có ảnh sẽ dùng hình minh họa.</p><p><a href="?page=bch-rooms">+ Thêm hạng phòng</a></p>';
+    echo '<div class="wrap"><h1>Hạng phòng</h1><p>Chọn 3–5 ảnh cho mỗi hạng phòng từ thư viện hoặc tải ảnh mới. Ảnh đầu tiên là ảnh đại diện. Không có ảnh sẽ dùng ảnh mặc định.</p><p><a href="?page=bch-rooms">+ Thêm hạng phòng</a></p>';
     $all_rooms=bch_rooms(true);
     $deleted=array_map('intval',get_option('bch_deleted_rooms',[]));
     $trash=($_GET['view']??'')==='trash';
@@ -124,7 +124,7 @@ function bch_admin_rooms() {
     if ($trash) { echo '</div>'; return; }
     $r=bch_room(absint($_GET['edit']??0),true);
     if ($r && in_array((int)$r->id,$deleted,true)) { echo '<p>Hạng phòng ở trong thùng rác. Hãy khôi phục trước khi sửa.</p></div>'; return; }
-    if ($r && in_array((int)$r->id,array_map('intval',get_option('bch_retired_rooms',[])),true)) echo '<p class="notice notice-info">Hạng demo đã lưu trữ, không hiển thị và không nhận đơn mới. Dữ liệu được giữ để đối chiếu đơn cũ.</p>';
+    if ($r && in_array((int)$r->id,array_map('intval',get_option('bch_retired_rooms',[])),true)) echo '<p class="notice notice-info">Hạng phòng mẫu đã lưu trữ, không hiển thị và không nhận đơn mới. Dữ liệu được giữ để đối chiếu đơn cũ.</p>';
     echo '<hr><h2 id="bch-room-editor">'.($r?'Sửa hạng phòng':'Thêm hạng phòng').'</h2><form method="post">'; wp_nonce_field('bch_rooms');
     echo '<input type="hidden" name="id" value="'.esc_attr($r->id??0).'">';
     foreach (['name'=>'Tên hạng','quantity'=>'Số phòng thực tế (0 để ngừng bán)','capacity'=>'Sức chứa','area'=>'Diện tích m²','bed'=>'Loại giường','price'=>'Giá mặc định / đêm (VND)','hourly_price'=>'Giá nghỉ giờ / 2 giờ đầu (VND, 0 để ngừng bán giờ)','amenities'=>'Tiện nghi (cách nhau bằng dấu phẩy)'] as $k=>$label) bch_admin_input($k,$label,$r->$k??'',in_array($k,['quantity','capacity','area','price','hourly_price'])?'number':'text');
