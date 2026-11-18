@@ -295,7 +295,7 @@ button,.button,.card-actions>a,.card-actions .button{font-size:18px}
 .hero.hero--artwork{display:block;min-height:0;width:100%;height:clamp(380px,38vw,660px);margin:0;border-radius:0 0 16px 16px;background:var(--cream);color:var(--ink)}
 .hero--artwork::after{display:none}
 .hero--artwork .hero-image{position:static;display:block;width:100%;height:100%;object-fit:cover;object-position:center 35%}
-.hero--artwork .hero-content{position:absolute;left:max(5%,calc((100% - 1200px)/2));right:5%;bottom:28px;width:auto;margin:0;padding:0}
+.hero--artwork .hero-content{position:absolute;left:max(5%,calc((100% - 1200px)/2));right:5%;bottom:10px;width:auto;margin:0;padding:0}
 .hero--artwork .hero-content>p,.hero--artwork .hero-content>h1{display:none}
 .hero--artwork .hero-links{margin:0;flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
 .hero--artwork .button.light{background:var(--gold);border-color:var(--gold);color:var(--ink)}
@@ -305,7 +305,7 @@ button,.button,.card-actions>a,.card-actions .button{font-size:18px}
 @media(max-width:680px){
   .hero.hero--artwork{width:100%;height:auto;margin:0;border-radius:0 0 12px 12px}
   .hero--artwork .hero-image{height:auto}
-  .hero--artwork .hero-content{left:5%;right:5%;bottom:4%;padding:0}
+  .hero--artwork .hero-content{left:5%;right:5%;bottom:6px;padding:0}
   .hero--artwork .hero-links .button{width:auto;min-height:36px;padding:7px 12px;font-size:12px}
   .hero--artwork+.search-shell{margin-top:16px}
 }
