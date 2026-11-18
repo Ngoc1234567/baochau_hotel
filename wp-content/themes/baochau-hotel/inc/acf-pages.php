@@ -25,13 +25,6 @@ function bch_acf_field($name,$label,$type='text',$extra=[]) {
 function bch_acf_groups() {
     $f='bch_acf_field';
     $groups=[];
-    $groups[]=['key'=>'group_bch_payment','title'=>'Bảo Châu — Tài khoản nhận cọc & mã QR','fields'=>[
-        $f('bch_payment_bank','Tên ngân hàng'),
-        $f('bch_payment_account','Số tài khoản','text',['instructions'=>'Nhập dạng chữ để giữ số 0 ở đầu.']),
-        $f('bch_payment_holder','Tên chủ tài khoản'),
-        $f('bch_payment_qr','Mã QR chuyển khoản','image',['instructions'=>'Tải ảnh QR đúng tài khoản ở trên. Khách nhập số tiền cọc và mã đặt phòng hiển thị trên đơn.','mime_types'=>'jpg,jpeg,png,webp']),
-        $f('bch_payment_live','Mở nhận giữ chỗ','true_false',['ui'=>1,'default_value'=>0,'instructions'=>'Bật sau khi nhập đủ ngân hàng, số tài khoản và chủ tài khoản. Khách sạn xác nhận cọc thủ công.']),
-    ],'location'=>[[['param'=>'page','operator'=>'==','value'=>(string)get_option('bch_booking_page')]]]];
     $common=[];
     foreach (['page-gioi-thieu.php','page-phong-nghi.php','page-tien-ich.php','page-lien-he.php'] as $template) $common[]=[['param'=>'page_template','operator'=>'==','value'=>$template]];
     $groups[]=['key'=>'group_bch_page','title'=>'Bảo Châu — Nội dung trang','fields'=>[

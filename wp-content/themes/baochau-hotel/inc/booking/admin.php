@@ -1,6 +1,10 @@
 <?php
 defined('ABSPATH') || exit;
 add_action('admin_enqueue_scripts',function () {
+    if (($_GET['page']??'')==='bch-settings' && current_user_can('manage_options')) {
+        wp_enqueue_media();
+        wp_enqueue_script('bch-settings',get_template_directory_uri().'/assets/admin-settings.js',['media-views'],'1.0.0',true);
+    }
     if (($_GET['page']??'')!=='bch-rooms' || !current_user_can('manage_options')) return;
     wp_enqueue_media();
     wp_enqueue_script('bch-room-images',get_template_directory_uri().'/assets/admin-rooms.js',['media-views'],'1.0.0',true);
@@ -33,7 +37,12 @@ function bch_admin_settings() {
     if (!current_user_can('manage_options')) return;
     if ($_SERVER['REQUEST_METHOD']==='POST') {
         check_admin_referer('bch_settings');
+        try {
         $s=[];
+        $s['qr_id']=absint($_POST['qr_id']??0);
+        if ($s['qr_id'] && !wp_attachment_is_image($s['qr_id'])) throw new RuntimeException('Vui lòng chọn một ảnh QR hợp lệ.');
+        $s['qr_url']=$s['qr_id']?(wp_get_attachment_image_url($s['qr_id'],'full')?:''):'';
+        $s['payment_settings_in_admin']=1;
         foreach (['bank','holder','account','contact'] as $k) $s[$k]=sanitize_text_field(wp_unslash($_POST[$k]??''));
         $s['hours']=max(1,min(48,absint($_POST['hours']??2)));
         $s['policy']=sanitize_textarea_field(wp_unslash($_POST['policy']??BCH_POLICY));
@@ -41,12 +50,16 @@ function bch_admin_settings() {
         $s['live']=isset($_POST['live'])?1:0; $s['mail']=isset($_POST['mail'])?1:0;
         update_option('bch_settings',$s);
         echo '<div class="notice notice-success"><p>Đã lưu cấu hình.</p></div>';
+        } catch (Throwable $e) { bch_admin_error($e); }
     }
     $s=bch_settings();
     echo '<div class="wrap"><h1>Cấu hình đặt phòng</h1><p>Chỉ bật nhận giữ chỗ sau khi thay toàn bộ dữ liệu mẫu và kiểm tra tài khoản nhận tiền.</p><form method="post">'; wp_nonce_field('bch_settings');
     foreach (['bank'=>'Ngân hàng','holder'=>'Chủ tài khoản','account'=>'Số tài khoản','contact'=>'Liên hệ lễ tân'] as $k=>$label) {
         echo '<p><label>'.esc_html($label).'<br><input class="regular-text" name="'.esc_attr($k).'" value="'.esc_attr($s[$k]).'"></label></p>';
     }
+    echo '<div data-payment-qr><h2>Mã QR nhận tiền cọc</h2><input type="hidden" name="qr_id" value="'.esc_attr($s['qr_id']).'">';
+    echo '<p><img data-qr-preview src="'.esc_url($s['qr_url']).'" alt="Mã QR nhận tiền cọc" style="max-width:240px;height:auto"'.(!$s['qr_url']?' hidden':'').'></p>';
+    echo '<p><button type="button" class="button" data-qr-select>Chọn / tải ảnh QR</button> <button type="button" class="button" data-qr-remove'.(!$s['qr_url']?' hidden':'').'>Gỡ ảnh QR</button></p><p class="description" data-qr-status>Chọn mã QR đúng tài khoản ngân hàng ở trên, sau đó bấm Lưu thay đổi.</p></div>';
     bch_admin_input('hours','Thời gian giữ chỗ (1–48 giờ; mặc định: 2)',$s['hours'],'number');
     echo '<p><label>Chính sách bổ sung<br><textarea name="policy" rows="6" cols="80">'.esc_textarea($s['policy']).'</textarea></label></p>';
     foreach (['free_upgrade'=>'Cho phép nâng hạng miễn phí khi hết phòng: 1 giường đôi → 2 giường đôi (khách phải đồng ý)','live'=>'Mở nhận giữ chỗ thật (đã kiểm tra ngân hàng và tồn phòng)','mail'=>'Gửi email (đã cấu hình SMTP và thử nhận thư)'] as $k=>$label) echo '<p><label><input type="checkbox" name="'.esc_attr($k).'" value="1" '.checked($s[$k],1,false).'>'.esc_html($label).'</label></p>';

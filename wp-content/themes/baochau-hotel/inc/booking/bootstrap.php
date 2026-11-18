@@ -16,7 +16,8 @@ add_action('init', function () {
 });
 add_action('bch_expire', 'bch_expire');
 function bch_settings() {
-    $s=wp_parse_args(get_option('bch_settings', []), ['bank'=>'','holder'=>'','account'=>'','qr_url'=>'','hours'=>2,'free_upgrade'=>0,'live'=>0,'mail'=>0,'contact'=>'Vui lòng cập nhật thông tin lễ tân','policy'=>BCH_POLICY]);
+    $s=wp_parse_args(get_option('bch_settings', []), ['bank'=>'','holder'=>'','account'=>'','qr_id'=>0,'qr_url'=>'','hours'=>2,'free_upgrade'=>0,'live'=>0,'mail'=>0,'contact'=>'Vui lòng cập nhật thông tin lễ tân','policy'=>BCH_POLICY]);
+    if (!empty($s['payment_settings_in_admin'])) return $s;
     $page=(int)get_option('bch_booking_page');
     foreach (['bank','holder','account','live'] as $key) {
         $field='bch_payment_'.$key;
@@ -27,6 +28,7 @@ function bch_settings() {
     }
     if ($page && metadata_exists('post',$page,'bch_payment_qr')) {
         $id=absint(get_post_meta($page,'bch_payment_qr',true));
+        $s['qr_id']=$id;
         $s['qr_url']=$id && wp_attachment_is_image($id)?(wp_get_attachment_image_url($id,'full')?:''):'';
     }
     return $s;
