@@ -340,6 +340,10 @@ button,.button,.card-actions>a,.card-actions .button{font-size:18px}
   .home-main .contact-section{margin-top:28px}
 }
 .amenities-location{margin:40px 0;padding-top:32px;border-top:1px solid var(--line)}
+.home-location-band{background:#f5efe5;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.home-location-band .amenities-location{margin:0 auto;padding:72px 0;border-top:0}
+.home-location-band .amenities-travel-grid article{background:var(--white)}
+@media(max-width:680px){.home-location-band .amenities-location{padding:44px 0}}
 .amenities-travel-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
 .amenities-travel-grid article{padding:24px;background:var(--cream);border:1px solid var(--line);border-radius:10px}
 .amenities-travel-grid h3{margin:0 0 12px;font-size:24px}
