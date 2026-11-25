@@ -401,3 +401,129 @@ button,.button,.card-actions>a,.card-actions .button{font-size:18px}
 @media print{
   .home-motion .home-reveal{opacity:1;translate:none}
 }
+
+/* Quick contact dock adapted from the DP theme. */
+.bch-floating-contact {
+    position: fixed;
+    right: 18px;
+    bottom: 28px;
+    z-index: 120;
+    display: grid;
+    gap: 14px;
+}
+
+.bch-floating-button {
+    position: relative;
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+    isolation: isolate;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.bch-floating-button::before,
+.bch-floating-button::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    z-index: -1;
+    border-radius: inherit;
+    background: currentColor;
+    opacity: 0.16;
+    animation: bch-floating-contact-pulse 1800ms ease-out infinite;
+}
+
+.bch-floating-button::after {
+    inset: -10px;
+    opacity: 0.08;
+    animation-delay: 450ms;
+}
+
+.bch-floating-button:hover,
+.bch-floating-button:focus-visible {
+    transform: translateY(-3px) scale(1.06);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+}
+
+.bch-floating-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.16);
+    animation: bch-floating-contact-swing 1350ms ease-in-out infinite;
+    transform-origin: 50% 80%;
+}
+
+.bch-floating-button:nth-child(2) .bch-floating-icon {
+    animation-delay: 150ms;
+}
+
+.bch-floating-button:nth-child(3) .bch-floating-icon {
+    animation-delay: 300ms;
+}
+
+.bch-floating-phone {
+    background: #b91420;
+    color: #b91420;
+}
+
+.bch-floating-phone .bch-floating-icon {
+    color: #fff;
+}
+
+.bch-floating-contact svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
+@keyframes bch-floating-contact-swing {
+    0%, 100% {
+        transform: rotate(0deg) translateY(0);
+    }
+
+    18% {
+        transform: rotate(-10deg) translateY(-1px);
+    }
+
+    36% {
+        transform: rotate(8deg) translateY(1px);
+    }
+
+    54% {
+        transform: rotate(-6deg) translateY(0);
+    }
+
+    72% {
+        transform: rotate(4deg) translateY(-1px);
+    }
+}
+
+@keyframes bch-floating-contact-pulse {
+    0% {
+        transform: scale(0.82);
+        opacity: 0.24;
+    }
+
+    80%, 100% {
+        transform: scale(1.28);
+        opacity: 0;
+    }
+}
+
+
+.bch-floating-zalo{background:#1aa7ec;color:#1aa7ec}
+.bch-floating-zalo .bch-floating-icon{color:#fff}
+.bch-floating-zalo-text{font:900 13px/1 Arial,sans-serif;letter-spacing:0}
+@media(max-width:860px){.bch-floating-contact{right:12px;bottom:22px;gap:11px}.bch-floating-button{width:48px;height:48px}.bch-floating-icon{width:37px;height:37px}}
+@media(max-width:520px){.bch-floating-contact{right:10px;bottom:18px;gap:10px}.bch-floating-button{width:44px;height:44px}.bch-floating-icon{width:34px;height:34px}}
+@media(prefers-reduced-motion:reduce){.bch-floating-button,.bch-floating-icon,.bch-floating-button::before,.bch-floating-button::after{animation:none;transition:none}.bch-floating-button:hover,.bch-floating-button:focus-visible{transform:none}}
+.bch-floating-contact{right:max(18px,env(safe-area-inset-right));bottom:calc(28px + env(safe-area-inset-bottom))}
+@media(max-width:680px){.bch-floating-contact{right:max(12px,env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom))}.bch-floating-button{width:48px;height:48px}}
+@media print{.bch-floating-contact{display:none}}
