@@ -142,7 +142,7 @@ function bch_hold($data,$at_counter=false) {
     if (!$at_counter && !bch_ready()) throw new RuntimeException('Chưa mở nhận giữ chỗ. Vui lòng liên hệ khách sạn.');
     $days=$stay['days'];
     if (!preg_match('/^[a-f0-9]{64}$/',$data['key']) || !preg_match('/^[a-f0-9]{64}$/',$data['token'])) throw new InvalidArgumentException('Phiên giữ chỗ không hợp lệ.');
-    if (!$data['name'] || strlen($data['name'])>190 || ((!$at_counter || $data['email']!=='') && !is_email($data['email'])) || strlen($data['email'])>190 || !preg_match('/^[+0-9 ()-]{8,25}$/',$data['phone'])) throw new InvalidArgumentException('Vui lòng nhập đúng họ tên, điện thoại và email.');
+    if (!$data['name'] || strlen($data['name'])>190 || ($data['email']!=='' && !is_email($data['email'])) || strlen($data['email'])>190 || !preg_match('/^[+0-9 ()-]{8,25}$/',$data['phone'])) throw new InvalidArgumentException('Vui lòng nhập đúng họ tên, điện thoại và email (nếu có).');
     $data['room']=(int)$data['room'];
     $allocated_id=(int)($data['allocated_room']??$data['room']);
     $accepted=!empty($data['upgrade_consent']);

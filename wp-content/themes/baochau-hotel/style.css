@@ -327,7 +327,12 @@ button,.button,.card-actions>a,.card-actions .button{font-size:18px}
 .home-main .service{padding:24px;background:#fff;border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:8px}
 .home-main .service h3{font-size:24px}
 .home-main .service p{margin-bottom:0}
-.home-main .contact-section{margin-top:48px;border-top:4px solid var(--gold)}
+.home-main .contact-section{margin-top:48px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--cream);color:var(--ink)}
+.home-main .contact-section .hotel-photo{background:#f0e9df}
+.home-main .contact-section .contact-copy p,.home-main .contact-section .hotel-photo figcaption{color:var(--muted)}
+.home-main .contact-section .contact-copy .eyebrow{color:var(--gold-text)}
+.home-main .contact-section .button.light{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.home-main .contact-section .button.light:hover{background:#dfbc78;border-color:#dfbc78}
 @media(max-width:680px){
   .home-main .home-search-band{padding:24px 0 32px}
   .home-main .home-search-band h2{font-size:22px}
