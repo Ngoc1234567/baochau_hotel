@@ -53,7 +53,10 @@ function bch_acf_groups() {
     $groups[]=['key'=>'group_bch_about','title'=>'Bảo Châu — Ảnh & nút giới thiệu','fields'=>[
         $f('bch_about_photo','Ảnh giới thiệu','image'),$f('bch_about_cta_label','Chữ nút'),$f('bch_about_cta_url','Liên kết nút','url',['instructions'=>'Để trống để mở trang Phòng nghỉ.']),
     ],'location'=>[[['param'=>'page_template','operator'=>'==','value'=>'page-gioi-thieu.php']]]];
-    $services=[];
+    $services=[
+        $f('bch_service_travel_tab','Vị trí & di chuyển','tab'),
+        $f('bch_airport_distance','Khoảng cách đến sân bay','text',['default_value'=>'Cách sân bay Điện Biên khoảng 10 km.','instructions'=>'Cập nhật khoảng cách đường bộ thực tế khi đã xác nhận.']),
+    ];
     for ($i=1;$i<=6;$i++) {
         $services[]=$f('bch_service_tab_'.$i,'Tiện ích '.$i,'tab');
         $services[]=$f('bch_service_'.$i.'_title','Tên tiện ích '.$i,'text',['instructions'=>'Để trống để ẩn thẻ tiện ích này.']);
