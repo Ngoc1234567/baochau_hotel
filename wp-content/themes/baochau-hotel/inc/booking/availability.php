@@ -33,7 +33,7 @@ function bch_availability_card($room,$state,$in,$out,$guests,$nights) {
     bch_stock_badge($room,$state);
     if ($state['quote']) echo '<p class="price">'.esc_html(bch_money($state['quote']['total'])).' <small>/ '.(int)$nights.' đêm</small></p><p>Cọc 30%: '.esc_html(bch_money($state['quote']['deposit'])).'</p>';
     echo '<div class="card-actions">';
-    if ($bookable) echo '<a class="button" href="'.esc_url($link).'">'.($state['upgrade']?'Xem phương án đổi phòng →':'Đặt phòng →').'</a>';
+    if ($bookable) echo '<a class="button" href="'.esc_url($link).'">'.($state['upgrade']?'Xem phương án đổi phòng':'Đặt phòng').'</a>';
     else echo '<button type="button" disabled>'.($state['status']==='closed'?'Tạm ngừng bán':'Hết phòng').'</button><a href="'.esc_url(bch_url()).'">Chọn ngày khác</a>';
     echo '</div></article>';
 }

@@ -9,4 +9,4 @@
 <nav class="nav" id="site-nav" aria-label="Menu chính">
 <?php if (has_nav_menu('primary')): wp_nav_menu(['theme_location'=>'primary','container'=>false]); else: ?>
 <?php foreach (['trang-chu'=>'Trang chủ','gioi-thieu'=>'Giới thiệu','phong-nghi'=>'Phòng nghỉ','tien-ich'=>'Tiện ích','lien-he'=>'Liên hệ'] as $slug=>$label): ?><a href="<?php echo esc_url(bch_page_url($slug)); ?>" <?php if (is_page($slug) || ($slug==='trang-chu' && is_front_page())) echo 'aria-current="page"'; ?>><?php echo esc_html($label); ?></a><?php endforeach; ?>
-<?php endif; ?><a class="button" href="<?php echo esc_url(bch_theme_booking()); ?>">Đặt phòng ↗</a></nav></div></header>
+<?php endif; ?><a class="button" href="<?php echo esc_url(bch_theme_booking()); ?>">Đặt phòng</a></nav></div></header>

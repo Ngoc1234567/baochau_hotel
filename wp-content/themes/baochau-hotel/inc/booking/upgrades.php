@@ -30,5 +30,5 @@ function bch_upgrade_description($booking) {
 }
 
 function bch_upgrade_notice($room,$target,$quote,$guests) {
-    echo '<section class="notice upgrade-offer" role="status"><h3>Đổi sang phòng lớn hơn, không phụ thu</h3><p>'.esc_html($room->name).' đã hết trong ngày bạn chọn. Khách sạn có thể bố trí <strong>'.esc_html($target->name).'</strong>, giữ giá của '.esc_html($room->name).' cho tối đa '.esc_html($room->capacity).' khách.</p><p>Tổng kỳ ở: <strong>'.esc_html(bch_money($quote['total'])).'</strong> · Cọc 30%: '.esc_html(bch_money($quote['deposit'])).'. Chưa giữ phòng; tình trạng phòng sẽ được kiểm tra lại khi bạn xác nhận.</p><a href="'.esc_url(bch_url()).'">Chọn ngày hoặc hạng phòng khác →</a></section>';
+    echo '<section class="notice upgrade-offer" role="status"><h3>Đổi sang phòng lớn hơn, không phụ thu</h3><p>'.esc_html($room->name).' đã hết trong ngày bạn chọn. Khách sạn có thể bố trí <strong>'.esc_html($target->name).'</strong>, giữ giá của '.esc_html($room->name).' cho tối đa '.esc_html($room->capacity).' khách.</p><p>Tổng kỳ ở: <strong>'.esc_html(bch_money($quote['total'])).'</strong> · Cọc 30%: '.esc_html(bch_money($quote['deposit'])).'. Chưa giữ phòng; tình trạng phòng sẽ được kiểm tra lại khi bạn xác nhận.</p><a href="'.esc_url(bch_url()).'">Chọn ngày hoặc hạng phòng khác</a></section>';
 }

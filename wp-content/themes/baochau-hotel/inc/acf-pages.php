@@ -5,7 +5,11 @@ defined('ABSPATH') || exit;
 function bch_field($name,$fallback='',$post_id=0) {
     $post_id=$post_id?:get_queried_object_id();
     if (!$post_id || !metadata_exists('post',$post_id,$name)) return $fallback;
-    return function_exists('get_field')?get_field($name,$post_id):get_post_meta($post_id,$name,true);
+    $value=function_exists('get_field')?get_field($name,$post_id):get_post_meta($post_id,$name,true);
+    if (in_array($name,['bch_home_cta_label','bch_home_contact_cta','bch_about_cta_label','bch_contact_button'],true)) {
+        $value=trim(str_replace(['→','↗'],'',(string)$value));
+    }
+    return $value;
 }
 function bch_home_field($name,$fallback='') { return bch_field('bch_home_'.$name,$fallback,(int)get_option('page_on_front')); }
 function bch_page_content() {
@@ -83,14 +87,14 @@ function bch_seed_acf_pages() {
     $values=[
         'eyebrow'=>'BẢO CHÂU HOTEL · CHÀO ĐÓN BẠN','title'=>str_replace('\\n',"\n",get_theme_mod('bch_hero_title','Một chốn an yên.\nMột kỳ nghỉ trọn vẹn.')),
         'text'=>get_theme_mod('bch_hero_text','Gác lại nhịp sống vội vã, tận hưởng những ngày thảnh thơi trong không gian ấm áp của Bảo Châu.'),
-        'cta_label'=>'Khám phá phòng nghỉ ↗','intro_label'=>'CHẠM VÀO SỰ THẢNH THƠI','intro_title'=>"Nơi những điều giản dị\nlàm nên kỳ nghỉ đẹp.",
+        'cta_label'=>'Khám phá phòng nghỉ','intro_label'=>'CHẠM VÀO SỰ THẢNH THƠI','intro_title'=>"Nơi những điều giản dị\nlàm nên kỳ nghỉ đẹp.",
         'intro'=>get_theme_mod('bch_intro','Một căn phòng dễ chịu, một giấc ngủ ngon và những khoảnh khắc dành riêng cho bạn. Bảo Châu chào đón mỗi chuyến đi bằng sự gần gũi và chu đáo.'),
         'rooms_label'=>'KHÔNG GIAN CỦA RIÊNG BẠN','rooms_title'=>'Chọn một nơi để nghỉ ngơi.','rooms_note'=>'Ấm áp. Tinh tế. Vừa đủ.',
         'services_label'=>'TẬN HƯỞNG TỪNG KHOẢNH KHẮC','services_title'=>'Những tiện nghi cho ngày thảnh thơi.',
         'services'=>get_theme_mod('bch_services',"Bữa sáng | Khởi đầu ngày mới thật nhẹ nhàng.\nKhông gian xanh | Một góc nhỏ để chậm lại.\nWi-Fi | Giữ kết nối trong suốt kỳ nghỉ.\nLễ tân | Đồng hành cùng từng chuyến đi."),
         'contact_label'=>'HẸN GẶP BẠN TẠI BẢO CHÂU','contact_title'=>"Kỳ nghỉ tiếp theo,\nbắt đầu từ đây.",
         'contact'=>get_theme_mod('bch_contact','Địa chỉ, điện thoại và email sẽ được khách sạn cập nhật trước khi mở đặt phòng.'),
-        'contact_photo'=>(int)get_theme_mod('bch_contact_photo'),'contact_cta'=>'Lên kế hoạch kỳ nghỉ ↗',
+        'contact_photo'=>(int)get_theme_mod('bch_contact_photo'),'contact_cta'=>'Lên kế hoạch kỳ nghỉ',
     ];
     $hero_url=get_theme_mod('bch_hero_image');
     if ($hero_url && ($image_id=attachment_url_to_postid($hero_url))) $values['image']=$image_id;
@@ -98,11 +102,11 @@ function bch_seed_acf_pages() {
     foreach (['gioi-thieu'=>'CÂU CHUYỆN BẢO CHÂU','phong-nghi'=>'KHÔNG GIAN NGHỈ NGƠI','tien-ich'=>'TẬN HƯỞNG KỲ NGHỈ','lien-he'=>'KẾT NỐI VỚI BẢO CHÂU'] as $slug=>$label) {
         $page=get_page_by_path($slug); if (!$page) continue;
         $set($page->ID,'bch_page_eyebrow',$label); $set($page->ID,'bch_page_body',$page->post_content);
-        if ($slug==='gioi-thieu') { $set($page->ID,'bch_about_photo',(int)get_theme_mod('bch_contact_photo')); $set($page->ID,'bch_about_cta_label','Khám phá phòng nghỉ →'); }
+        if ($slug==='gioi-thieu') { $set($page->ID,'bch_about_photo',(int)get_theme_mod('bch_contact_photo')); $set($page->ID,'bch_about_cta_label','Khám phá phòng nghỉ'); }
         if ($slug==='lien-he') {
             $set($page->ID,'bch_contact_side_title','Bạn đã chọn được ngày nghỉ?');
             $set($page->ID,'bch_contact_side_text','Kiểm tra phòng trống và tổng tiền trước khi giữ chỗ. Khách sạn xác nhận sau khi đối chiếu tiền cọc.');
-            $set($page->ID,'bch_contact_button','Đặt phòng →');
+            $set($page->ID,'bch_contact_button','Đặt phòng');
         }
     }
     update_option('bch_acf_pages_version','1');

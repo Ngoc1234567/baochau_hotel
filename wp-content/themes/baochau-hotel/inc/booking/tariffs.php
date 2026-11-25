@@ -54,7 +54,7 @@ function bch_tariff_panel() {
                     <?php endforeach; ?></tbody>
                 </table>
             </div>
-            <div class="hourly-contact"><div><p>Giá áp dụng cho 2 giờ đầu. Sau đó thu thêm <strong>30.000đ/giờ</strong>, giờ lẻ làm tròn lên giờ tiếp theo. Vui lòng liên hệ lễ tân để kiểm tra phòng và giờ nhận/trả. Website hiện chỉ nhận đặt ngày đêm.</p></div><a class="button" href="<?php echo esc_url(bch_page_url('lien-he')); ?>">Liên hệ đặt phòng theo giờ →</a></div>
+            <div class="hourly-contact"><div><p>Giá áp dụng cho 2 giờ đầu. Sau đó thu thêm <strong>30.000đ/giờ</strong>, giờ lẻ làm tròn lên giờ tiếp theo. Vui lòng liên hệ lễ tân để kiểm tra phòng và giờ nhận/trả. Website hiện chỉ nhận đặt ngày đêm.</p></div><a class="button" href="<?php echo esc_url(bch_page_url('lien-he')); ?>">Liên hệ đặt phòng theo giờ</a></div>
         </section>
         <div class="tariff-contact-note">
             <p><em>* Giá phòng trên chưa có VAT; Quý khách có nhu cầu lấy hóa đơn GTGT, xin vui lòng báo cho Lễ tân khi làm thủ tục nhận phòng.</em></p>

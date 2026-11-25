@@ -38,7 +38,7 @@ function bch_search_form($in='',$out='',$guests=2) {
         <label>Ngày nhận phòng · 13:00<input type="date" name="in" min="<?php echo esc_attr($today); ?>" value="<?php echo esc_attr($in); ?>" required></label>
         <label>Ngày trả phòng · 12:00<input type="date" name="out" min="<?php echo esc_attr($next); ?>" value="<?php echo esc_attr($out); ?>" required></label>
         <label>Số khách<select name="guests"><?php for ($i=1;$i<=10;$i++) echo '<option value="'.$i.'" '.selected($guests,$i,false).'>'.$i.' khách</option>'; ?></select></label>
-        <button type="submit">Tìm phòng trống <span aria-hidden="true">↗</span></button>
+        <button type="submit">Tìm phòng trống</button>
     </form>
     <?php return ob_get_clean();
 }
@@ -185,14 +185,14 @@ function bch_reservation_form($values=[],$collapsed=false,$compact=false) {
                     <label class="reservation-wide">Email (không bắt buộc)<input name="email" type="email" autocomplete="email" maxlength="190" placeholder="Email nhận thông tin đặt phòng" value="<?php echo esc_attr($v['email']); ?>"></label>
                 </div>
                 <p class="reservation-help">Các trường có dấu * là bắt buộc. Mỗi yêu cầu đặt 1 phòng. Bước này chưa tạo đơn hoặc giữ phòng.</p>
-                <button type="submit" name="bch_preview" value="1">Kiểm tra phòng & xem giá <span aria-hidden="true">→</span></button>
+                <button type="submit" name="bch_preview" value="1">Kiểm tra phòng & xem giá</button>
             </form>
         </section>
         <?php if (!$compact): ?><aside class="reservation-aside" aria-label="Hướng dẫn đặt phòng">
             <p class="eyebrow">ĐẶT TRỰC TIẾP VỚI KHÁCH SẠN</p>
             <h3>An tâm cho<br>mỗi kỳ nghỉ.</h3>
             <ol class="reservation-guide"><li><strong>Chọn kỳ nghỉ</strong><span>Ngày lưu trú, số khách và hạng phòng phù hợp.</span></li><li><strong>Kiểm tra & giữ chỗ</strong><span>Xem tổng tiền và khoản cọc 30% trước khi gửi.</span></li><li><strong>Xác nhận đặt phòng</strong><span>Khách sạn xác nhận sau khi đối chiếu đủ tiền cọc.</span></li></ol>
-            <div class="reservation-support"><strong>Bạn cần hỗ trợ?</strong><p><?php echo esc_html(bch_settings()['contact']); ?></p><a href="<?php echo esc_url(get_permalink(get_option('bch_policy_page'))); ?>">Xem chính sách đặt cọc →</a></div>
+            <div class="reservation-support"><strong>Bạn cần hỗ trợ?</strong><p><?php echo esc_html(bch_settings()['contact']); ?></p><a href="<?php echo esc_url(get_permalink(get_option('bch_policy_page'))); ?>">Xem chính sách đặt cọc</a></div>
         </aside><?php endif; ?>
     </div>
     <?php
