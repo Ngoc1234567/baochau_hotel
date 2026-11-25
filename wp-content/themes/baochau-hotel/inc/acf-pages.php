@@ -71,6 +71,8 @@ function bch_acf_groups() {
     $groups[]=['key'=>'group_bch_contact','title'=>'Bảo Châu — Thông tin liên hệ','fields'=>[
         $f('bch_contact_address','Địa chỉ','textarea'),$f('bch_contact_phone','Điện thoại lễ tân','textarea',['instructions'=>'Mỗi số một dòng hoặc ngăn cách bằng dấu chấm phẩy.']),
         $f('bch_contact_email','Email','email'),$f('bch_contact_map','Liên kết Google Maps','url'),
+        $f('bch_floating_hotline','Hotline nút nổi','text',['default_value'=>'0888.5999.68','instructions'=>'Số điện thoại cho nút gọi ở góc phải trên toàn website. Để trống để ẩn nút gọi.']),
+        $f('bch_floating_zalo','Liên kết Zalo nút nổi','url',['instructions'=>'Ví dụ: https://zalo.me/0888599968. Để trống để dùng số Hotline nút nổi.']),
         $f('bch_contact_side_title','Tiêu đề khung tư vấn'),$f('bch_contact_side_text','Nội dung tư vấn','textarea'),
         $f('bch_contact_button','Chữ nút đặt phòng'),
     ],'location'=>[[['param'=>'page_template','operator'=>'==','value'=>'page-lien-he.php']]]];
