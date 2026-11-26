@@ -538,3 +538,16 @@ button,.button,.card-actions>a,.card-actions .button{font-size:18px}
 .bch-floating-contact{right:max(18px,env(safe-area-inset-right));bottom:calc(28px + env(safe-area-inset-bottom))}
 @media(max-width:680px){.bch-floating-contact{right:max(12px,env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom))}.bch-floating-button{width:48px;height:48px}}
 @media print{.bch-floating-contact{display:none}}
+
+/* Payment QR preview, sized to fit both portrait and landscape screens. */
+.deposit-qr [data-qr-zoom]{display:inline-block;max-width:100%;cursor:zoom-in;border-radius:8px}
+.qr-zoom-open{overflow:hidden}
+.qr-zoom-dialog{width:min(640px,calc(100% - 32px));max-width:none;max-height:calc(100dvh - 32px);padding:20px;border:1px solid var(--line);border-radius:16px;background:#fff;color:var(--ink);overflow:auto;overscroll-behavior:contain;text-align:center;box-shadow:0 24px 80px #0005}
+.qr-zoom-dialog::backdrop{background:#081322bf}
+.qr-zoom-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
+.qr-zoom-header h2{margin:0;font-size:20px;line-height:1.4;text-align:left}
+.qr-zoom-header button{flex:none;min-height:44px;padding:8px 12px;border-radius:8px;font-size:16px}
+.qr-zoom-image{display:block;width:auto;height:auto;max-width:100%;max-height:65dvh;object-fit:contain;margin:auto}
+.qr-zoom-dialog p,.qr-zoom-dialog>a{font-size:14px}
+.qr-zoom-dialog>a{display:inline-flex;align-items:center;min-height:44px}
+@media(max-width:680px){.qr-zoom-dialog{padding:16px}.qr-zoom-header{gap:8px}.qr-zoom-header h2{font-size:18px}}

@@ -87,3 +87,39 @@ document.querySelectorAll('.booking-search, .reservation-form').forEach(form => 
     }
   });
 })();
+
+// A native modal keeps keyboard focus inside the enlarged payment QR.
+(() => {
+  const links = document.querySelectorAll('[data-qr-zoom]');
+  if (!links.length || typeof HTMLDialogElement === 'undefined' ||
+      typeof HTMLDialogElement.prototype.showModal !== 'function') return;
+  const dialog = document.createElement('dialog');
+  dialog.className = 'qr-zoom-dialog';
+  dialog.setAttribute('aria-labelledby', 'qr-zoom-title');
+  dialog.innerHTML = '<div class="qr-zoom-header"><h2 id="qr-zoom-title">Mã QR chuyển khoản</h2><button type="button" aria-label="Đóng ảnh QR" autofocus>Đóng ×</button></div><img class="qr-zoom-image" alt=""><p>Bấm giữ hoặc mở ảnh gốc để lưu mã QR.</p><a target="_blank" rel="noopener">Mở ảnh gốc</a>';
+  document.body.append(dialog);
+  const preview = dialog.querySelector('img');
+  const original = dialog.querySelector('a');
+  let trigger;
+  links.forEach(link => link.addEventListener('click', event => {
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    trigger = link;
+    preview.src = link.href;
+    preview.alt = link.querySelector('img').alt;
+    original.href = link.href;
+    dialog.showModal();
+    document.documentElement.classList.add('qr-zoom-open');
+  }));
+  dialog.querySelector('button').addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', event => {
+    if (event.target !== dialog) return;
+    const rect = dialog.getBoundingClientRect();
+    if (event.clientX < rect.left || event.clientX > rect.right ||
+        event.clientY < rect.top || event.clientY > rect.bottom) dialog.close();
+  });
+  dialog.addEventListener('close', () => {
+    document.documentElement.classList.remove('qr-zoom-open');
+    trigger?.focus({ preventScroll: true });
+  });
+})();

@@ -146,7 +146,7 @@ function bch_checkout($room,$q,$in,$out,$guests,$guest=[],$part='all') {
     echo '<div class="manual-deposit"><h3>Thông tin chuyển khoản cọc</h3><dl>';
     foreach (['Ngân hàng'=>$bank['bank'],'Số tài khoản'=>$bank['account'],'Chủ tài khoản'=>$bank['holder'],'Tiền cọc (30%)'=>bch_money($q['deposit'])] as $label=>$value) echo '<dt>'.esc_html($label).'</dt><dd>'.esc_html($value).'</dd>';
     echo '</dl>';
-    if (!empty($bank['qr_url'])) echo '<img src="'.esc_url($bank['qr_url']).'" alt="Mã QR tài khoản khách sạn" width="240" height="240">';
+    if (!empty($bank['qr_url'])) echo '<figure class="deposit-qr"><a data-qr-zoom href="'.esc_url($bank['qr_url']).'" target="_blank" rel="noopener" aria-label="Phóng to mã QR tài khoản khách sạn"><img src="'.esc_url($bank['qr_url']).'" alt="Mã QR tài khoản khách sạn" width="240" height="240"></a><figcaption>Bấm vào mã QR để phóng to.</figcaption></figure>';
     echo '<p>Gửi yêu cầu để nhận mã đặt phòng và nội dung chuyển khoản trước khi chuyển cọc.</p></div>';
     wp_nonce_field('bch_hold');
     $fields=['bch_hold'=>1,'room'=>$room->id,'allocated_room'=>$allocated->id,'in'=>$in,'out'=>$out,'guests'=>$guests,'quoted'=>$q['total'],'key'=>bin2hex(random_bytes(32)),'token'=>$_COOKIE['bch_booking_access']??bin2hex(random_bytes(32))];
@@ -216,7 +216,7 @@ function bch_receipt($r) {
         echo '<div class="manual-deposit"><h3>Chuyển khoản cọc để xác nhận phòng</h3><p>Vui lòng chuyển khoản theo thông tin bên dưới. Khách sạn sẽ kiểm tra và xác nhận thủ công sau khi nhận đủ tiền cọc.</p><dl>';
         foreach (['Ngân hàng'=>$bank['bank']??'','Số tài khoản'=>$bank['account']??'','Chủ tài khoản'=>$bank['holder']??'','Số tiền cọc (30%)'=>bch_money($r->deposit),'Nội dung chuyển khoản'=>$r->code] as $label=>$value) echo '<dt>'.esc_html($label).'</dt><dd>'.esc_html($value).'</dd>';
         echo '</dl>';
-        if (!empty($bank['qr_url'])) echo '<figure class="deposit-qr"><a href="'.esc_url($bank['qr_url']).'" target="_blank" rel="noopener"><img src="'.esc_url($bank['qr_url']).'" alt="Mã QR tài khoản nhận cọc" width="320" height="320"></a><figcaption>Quét QR hoặc bấm ảnh để mở và lưu. Nhập đúng số tiền cọc và mã đặt phòng ở trên.</figcaption></figure>';
+        if (!empty($bank['qr_url'])) echo '<figure class="deposit-qr"><a data-qr-zoom aria-label="Phóng to mã QR tài khoản nhận cọc" href="'.esc_url($bank['qr_url']).'" target="_blank" rel="noopener"><img src="'.esc_url($bank['qr_url']).'" alt="Mã QR tài khoản nhận cọc" width="320" height="320"></a><figcaption>Quét QR hoặc bấm ảnh để mở và lưu. Nhập đúng số tiền cọc và mã đặt phòng ở trên.</figcaption></figure>';
         echo '<p>Chuyển khoản trước <strong>'.esc_html(wp_date('d/m/Y H:i',strtotime($r->expires_at.' UTC'),new DateTimeZone('Asia/Ho_Chi_Minh'))).'</strong> (giờ Việt Nam).</p><p>Đơn đang chờ nhận cọc. Lưu lại mã đặt phòng để liên hệ lễ tân.</p></div>';
     }
     if ($expired || in_array($r->status,['expired','cancelled'],true)) echo '<p class="notice">Không chuyển khoản cho đơn này. Nếu đã chuyển tiền, liên hệ lễ tân để kiểm tra; không tự khôi phục đơn.</p>';

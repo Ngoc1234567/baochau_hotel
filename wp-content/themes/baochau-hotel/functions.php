@@ -8,7 +8,7 @@ add_action('after_setup_theme',function () { add_theme_support('title-tag'); add
 add_action('wp_enqueue_scripts',function () {
     wp_enqueue_style('baochau-fonts','https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap',[],null);
     wp_enqueue_style('baochau',get_stylesheet_uri(),['baochau-fonts'],(string)filemtime(get_stylesheet_directory().'/style.css'));
-    wp_enqueue_script('baochau',get_template_directory_uri().'/assets/site.js',[],'1.0.7',true);
+    wp_enqueue_script('baochau',get_template_directory_uri().'/assets/site.js',[],(string)filemtime(get_template_directory().'/assets/site.js'),true);
 });
 add_filter('document_title_parts',function ($parts) { if (isset($_GET['room_detail']) && function_exists('bch_room')) { $room=bch_room(absint($_GET['room_detail'])); if ($room) $parts['title']=$room->name; } return $parts; });
 add_filter('body_class',function ($classes) { if (is_page((int)get_option('bch_booking_page'))) $classes[]='hotel-booking-page'; return $classes; });
