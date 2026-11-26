@@ -301,23 +301,16 @@ button,.button,.card-actions>a,.card-actions .button{font-size:18px}
 .hero--artwork .hero-image{position:static;display:block;width:100%;max-width:1774px;height:auto;aspect-ratio:2/1;object-fit:contain;margin:0 auto}
 /* The action has its own surface, clear of the artwork's title and landmarks. */
 .hero--artwork .hero-content{display:flex;align-items:center;justify-content:space-between;gap:24px;width:100%;margin:0;padding:24px max(5%,calc((100% - 1200px)/2));background:var(--cream);border-bottom:1px solid var(--line)}
-.hero-caption{display:grid;gap:4px;min-width:0;line-height:1.6}
-.hero-caption strong{font-size:20px;font-weight:600}
-.hero-caption span{font-size:14px;color:var(--muted)}
 .hero--artwork .hero-links{margin:0;flex:none;gap:0}
 .hero--artwork .button.light{min-height:52px;gap:24px;padding:12px 22px;background:var(--gold);border-color:var(--gold);border-radius:8px;color:var(--ink);font-size:16px;font-weight:600}
 .hero--artwork .button.light:hover{background:#dfbc78;border-color:#dfbc78}
 .screen-reader-text{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media(max-width:980px){
   .hero--artwork .hero-content{gap:20px;padding:20px 5%}
-  .hero-caption strong{font-size:18px}
 }
 @media(max-width:680px){
   .hero--artwork .hero-content{flex-direction:column;align-items:stretch;gap:16px;padding:20px 16px 24px}
-  .hero-caption{gap:6px}
-  .hero-caption strong{font-size:20px;line-height:1.4}
-  .hero-caption span{font-size:14px;max-width:34ch}
-  .hero--artwork .hero-links .button{width:100%;min-height:52px;justify-content:space-between;padding:12px 18px;font-size:16px}
+  .hero--artwork .hero-links .button{width:100%;min-height:52px;justify-content:center;padding:12px 18px;font-size:16px}
 }
 /* Give each homepage section a clear boundary and visual rhythm. */
 .home-main .home-search-band{padding:32px 0 40px;background:#fff;border-bottom:1px solid var(--line)}

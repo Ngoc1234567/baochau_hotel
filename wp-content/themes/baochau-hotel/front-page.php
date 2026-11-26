@@ -15,14 +15,12 @@ $hero_alt=$acf_hero?(get_post_meta($acf_hero,'_wp_attachment_image_alt',true)?:'
     <?php if ($hero_is_artwork): ?><h1 class="screen-reader-text"><?php echo esc_html(get_bloginfo('name')); ?> — Khách sạn tại Điện Biên Phủ</h1><?php endif; ?>
     <img class="hero-image" src="<?php echo esc_url($hero_url); ?>" alt="<?php echo esc_attr($hero_alt); ?>" fetchpriority="high" decoding="async">
     <div class="wrap hero-content">
-        <?php if ($hero_is_artwork): ?>
-        <div class="hero-caption"><strong>Ngay trung tâm Điện Biên Phủ</strong><span>Chỉ 50 m đến Quảng trường 7/5 · Thuận tiện khám phá thành phố</span></div>
-        <?php else: ?>
+        <?php if (!$hero_is_artwork): ?>
         <p class="eyebrow"><?php echo esc_html(bch_home_field('eyebrow','BẢO CHÂU HOTEL · CHÀO ĐÓN BẠN')); ?></p>
         <h1><?php echo nl2br(esc_html(str_replace('\\n',"\n",bch_home_field('title','Một chốn an yên.\nMột kỳ nghỉ trọn vẹn.')))); ?></h1>
         <p><?php echo esc_html(bch_home_field('text','Gác lại nhịp sống vội vã, tận hưởng những ngày thảnh thơi trong không gian ấm áp của Bảo Châu.')); ?></p>
         <?php endif; ?>
-        <div class="hero-links"><a class="button light" href="<?php echo esc_url(bch_home_field('cta_url')?:bch_page_url('phong-nghi')); ?>"><?php echo esc_html(bch_home_field('cta_label','Khám phá phòng nghỉ')); ?><span aria-hidden="true">↗</span></a></div>
+        <div class="hero-links"><a class="button light" href="<?php echo esc_url(bch_home_field('cta_url')?:bch_page_url('phong-nghi')); ?>"><?php echo esc_html(bch_home_field('cta_label','Khám phá phòng nghỉ')); ?></a></div>
     </div>
 </section>
 <section class="home-search-band" aria-labelledby="home-search-title"><div class="wrap search-shell"><h2 id="home-search-title">Tìm phòng trống</h2><?php echo bch_search_form(); ?></div></section>
