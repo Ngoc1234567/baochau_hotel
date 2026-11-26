@@ -44,7 +44,7 @@ function bch_search_form($in='',$out='',$guests=2) {
 }
 function bch_booking_room_url($room,$in='',$out='',$guests=0) {
     [$in,$out]=bch_form_dates($in,$out);
-    return bch_url(['room'=>$room->id,'in'=>$in,'out'=>$out,'guests'=>$guests?:min(2,(int)$room->capacity)]);
+    return bch_url(['room'=>$room->id,'in'=>$in,'out'=>$out,'guests'=>$guests?:min(2,(int)$room->capacity)]).'#thong-tin-dat-phong';
 }
 function bch_booking_screen() {
     ob_start();

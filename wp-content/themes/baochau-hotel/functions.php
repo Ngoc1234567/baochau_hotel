@@ -28,6 +28,6 @@ add_action('customize_register',function ($c) {
     $c->add_setting('bch_demo',['default'=>true,'sanitize_callback'=>function ($v) { return (bool)$v; }]);
     $c->add_control('bch_demo',['label'=>'Hiện ghi chú nội dung','section'=>'bch_brand','type'=>'checkbox']);
 });
-function bch_theme_booking($args=[]) { return function_exists('bch_url')?bch_url($args):home_url('/#phong'); }
+function bch_theme_booking($args=[]) { return function_exists('bch_url')?bch_url($args).'#thong-tin-dat-phong':home_url('/#phong'); }
 function bch_theme_image($room=null) { $images=$room?(json_decode($room->images,true)?:[]):[]; return $images[0]??get_template_directory_uri().'/assets/room.svg'; }
 add_filter('template_include',function ($template) { return isset($_GET['room_detail'])?get_template_directory().'/room.php':$template; });
