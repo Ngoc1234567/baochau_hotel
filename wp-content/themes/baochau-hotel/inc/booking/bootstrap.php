@@ -11,12 +11,13 @@ require_once __DIR__ . '/counter.php';
 require_once __DIR__ . '/public.php';
 add_filter('cron_schedules', function ($s) { $s['bch_minute'] = ['interval'=>60,'display'=>'Mỗi phút']; return $s; });
 add_action('init', function () {
-    if (get_option('bch_schema') !== '6') bch_install();
+    if (get_option('bch_schema') !== '7') bch_install();
     if (!wp_next_scheduled('bch_expire')) wp_schedule_event(time(), 'bch_minute', 'bch_expire');
 });
 add_action('bch_expire', 'bch_expire');
 function bch_settings() {
     $s=wp_parse_args(get_option('bch_settings', []), ['bank'=>'','holder'=>'','account'=>'','qr_id'=>0,'qr_url'=>'','hours'=>2,'free_upgrade'=>0,'live'=>0,'mail'=>0,'contact'=>'Vui lòng cập nhật thông tin lễ tân','policy'=>BCH_POLICY]);
+    $s=wp_parse_args($s,['reception_mail'=>0,'reception_email'=>'']);
     if (!empty($s['payment_settings_in_admin'])) return $s;
     $page=(int)get_option('bch_booking_page');
     foreach (['bank','holder','account','live'] as $key) {

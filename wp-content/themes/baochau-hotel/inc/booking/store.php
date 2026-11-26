@@ -58,6 +58,7 @@ function bch_install() {
  deleted_at datetime DEFAULT NULL,
  deleted_by bigint(20) unsigned DEFAULT NULL,
  mail_sent tinyint(1) NOT NULL DEFAULT 0,
+ reception_mail_status tinyint(1) NOT NULL DEFAULT 0,
  PRIMARY KEY  (id),
  UNIQUE KEY request_key (request_key),
  UNIQUE KEY code (code),
@@ -86,7 +87,7 @@ function bch_install() {
         }
         update_option('bch_hourly_prices_v1',1);
     }
-    update_option('bch_schema','6');
+    update_option('bch_schema','7');
 }
 /** All inventory writes share this DB advisory lock and transaction. */
 function bch_atomic($fn) {
@@ -127,6 +128,19 @@ function bch_owned_booking($row) {
     $token=$_COOKIE['bch_booking_access']??'';
     return is_string($token) && preg_match('/^[a-f0-9]{64}$/',$token) && hash_equals($row->token_hash,hash('sha256',$token));
 }
+// Called inside bch_atomic so concurrent bookings cannot claim the same code.
+function bch_booking_code() {
+    global $wpdb;
+    $alphabet='23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+    for ($attempt=0;$attempt<20;$attempt++) {
+        $code='BC';
+        for ($i=0;$i<6;$i++) $code.=$alphabet[random_int(0,strlen($alphabet)-1)];
+        $existing=$wpdb->get_var($wpdb->prepare('SELECT code FROM '.bch_table('bookings').' WHERE code=%s',$code));
+        if ($wpdb->last_error) throw new RuntimeException('Không kiểm tra được mã đặt phòng. Vui lòng thử lại.');
+        if ($existing===null) return $code;
+    }
+    throw new RuntimeException('Không tạo được mã đặt phòng. Vui lòng thử lại.');
+}
 function bch_hold($data,$at_counter=false) {
     if ($at_counter && !current_user_can('bch_manage_bookings')) throw new RuntimeException('Bạn không có quyền tạo đơn tại quầy.');
     if (!$at_counter && ($data['stay_type']??'overnight')!=='overnight') throw new InvalidArgumentException('Nghỉ giờ chỉ được tạo tại quầy.');
@@ -149,7 +163,8 @@ function bch_hold($data,$at_counter=false) {
     $fingerprint=hash('sha256',wp_json_encode([$data['room'],$data['in'],$data['out'],$data['guests'],$data['name'],$data['phone'],$data['email'],$allocated_id,$accepted]));
     $fingerprint=hash('sha256',$fingerprint.'|'.$stay['type'].'|'.$stay['start'].'|'.$stay['end']);
     if ($at_counter) $fingerprint=hash('sha256',$fingerprint.'|counter|'.get_current_user_id().'|'.$initial_status.'|'.($data['paid']??'').'|'.(!empty($data['payment_verified'])?'1':'0'));
-    return bch_atomic(function () use ($data,$days,$fingerprint,$allocated_id,$accepted,$at_counter,$initial_status,$stay) {
+    $created=false;
+    $booking=bch_atomic(function () use ($data,$days,$fingerprint,$allocated_id,$accepted,$at_counter,$initial_status,$stay,&$created) {
         global $wpdb; $b=bch_table('bookings');
         bch_expire_rows();
         $existing=$wpdb->get_row($wpdb->prepare("SELECT * FROM $b WHERE request_key=%s",$data['key']));
@@ -174,12 +189,16 @@ function bch_hold($data,$at_counter=false) {
         $required_paid=$initial_status==='checked_in'?$quote['total']:($initial_status==='confirmed'?$quote['deposit']:0);
         if ($at_counter && (!is_numeric($paid) || (float)$paid!==(float)$required_paid)) throw new InvalidArgumentException('Số tiền đã thu phải bằng '.bch_money($required_paid).' cho trạng thái đã chọn.');
         if ($at_counter && $required_paid>0 && empty($data['payment_verified'])) throw new RuntimeException('Vui lòng xác nhận đã thực thu số tiền trên.');
-        $s=bch_settings(); $code='BC'.strtoupper(bin2hex(random_bytes(6)));
+        $s=bch_settings(); $code=bch_booking_code();
         $now=strtotime($wpdb->get_var('SELECT UTC_TIMESTAMP()').' UTC');
         $ok=$wpdb->insert($b,['code'=>$code,'token_hash'=>hash('sha256',$data['token']),'request_key'=>$data['key'],'fingerprint'=>$fingerprint,'room_id'=>$allocated->id,'room_name'=>$allocated->name,'requested_room_id'=>$room->id,'requested_room_name'=>$room->name,'upgrade_accepted'=>$upgraded?1:0,'checkin'=>$data['in'],'checkout'=>$data['out'],'stay_type'=>$stay['type'],'starts_at'=>$stay['start'],'ends_at'=>$stay['end'],'guests'=>$data['guests'],'name'=>$data['name'],'phone'=>$data['phone'],'email'=>$data['email'],'total'=>$quote['total'],'deposit'=>($at_counter && $initial_status==='checked_in'?0:$quote['deposit']),'nightly'=>wp_json_encode($quote['nightly']),'bank'=>wp_json_encode(array_intersect_key($s,array_flip(['bank','holder','account','qr_url']))),'source'=>$at_counter?'counter':'website','created_by'=>$at_counter?get_current_user_id():null,'status'=>$initial_status,'confirmed_at'=>$initial_status!=='pending'?gmdate('Y-m-d H:i:s',$now):null,'confirmed_by'=>$initial_status!=='pending'?get_current_user_id():null,'checked_in_at'=>$initial_status==='checked_in'?gmdate('Y-m-d H:i:s',$now):null,'checked_in_by'=>$initial_status==='checked_in'?get_current_user_id():null,'balance_paid'=>$initial_status==='checked_in'?$quote['total']:0,'expires_at'=>gmdate('Y-m-d H:i:s',$now+max(1,min(48,(int)$s['hours']))*3600),'created_at'=>gmdate('Y-m-d H:i:s',$now)]);
         if (!$ok) throw new RuntimeException('Không lưu được đơn. Vui lòng thử lại.');
+        $created=true;
         return $wpdb->get_row($wpdb->prepare("SELECT * FROM $b WHERE id=%d",$wpdb->insert_id));
     });
+    // Send only for a newly committed booking, outside the inventory transaction.
+    if ($created && !$at_counter) bch_reception_mail($booking);
+    return $booking;
 }
 function bch_transition($id,$action,$balance_verified=false) {
     return bch_atomic(function () use ($id,$action,$balance_verified) {
@@ -223,6 +242,22 @@ function bch_receipt_text($r) {
     $stay_text=bch_stay_label($r);
     if ($r->status==='checked_in') return "$upgrade\nMã: $r->code\nTrạng thái: Đã nhận phòng\nPhòng: $r->room_name\n$stay_text\nTổng tiền phòng: ".bch_money($r->total)."\nĐã thu đủ tiền phòng.\nThu khi nhận phòng: ".bch_money($r->balance_paid)."\nCòn lại: ".bch_money(bch_balance_due($r))."\nNhận phòng lúc: ".wp_date('d/m/Y H:i',strtotime($r->checked_in_at.' UTC'),$tz)." (giờ Việt Nam)\n".bch_settings()['contact'];
     return "$upgrade\nMã: $r->code\nTrạng thái: ".bch_status($r->status)."\nPhòng: $r->room_name\n$stay_text\nTổng: ".bch_money($r->total)."\nCọc 30%: ".bch_money($r->deposit)."\nCòn lại: ".bch_money(bch_balance_due($r))."\nNgân hàng: {$bank['bank']}\nChủ tài khoản: {$bank['holder']}\nSố tài khoản: {$bank['account']}\nNội dung chuyển khoản: $r->code\nHạn giữ chỗ: ".wp_date('d/m/Y H:i',strtotime($r->expires_at.' UTC'),$tz)." (giờ Việt Nam)\n".BCH_POLICY."\n".bch_settings()['contact'];
+}
+function bch_reception_mail($r) {
+    $s=bch_settings();
+    if (empty($s['reception_mail']) || !is_email($s['reception_email']) || ($r->source??'website')!=='website' || !empty($r->reception_mail_status)) return;
+    global $wpdb;
+    $sent=false;
+    try {
+        $body="Có yêu cầu đặt phòng mới từ website. Vui lòng liên hệ khách trong vòng 15 phút.\n\n";
+        $body.="Khách hàng: $r->name\nĐiện thoại / Zalo: $r->phone\nEmail: ".($r->email?:'Không cung cấp')."\nSố khách: $r->guests\n\n";
+        $body.=bch_receipt_text($r)."\n\nQuản lý đơn đặt phòng: ".admin_url('admin.php?page=bch-bookings');
+        $sent=wp_mail($s['reception_email'],'[Bảo Châu] Đơn đặt phòng mới '.$r->code,$body);
+    } catch (Throwable $e) {
+        error_log('BCH: reception email failed for booking '.(int)$r->id);
+    }
+    // 0: not attempted, 1: accepted by mail transport, 2: failed.
+    $wpdb->update(bch_table('bookings'),['reception_mail_status'=>$sent?1:2],['id'=>$r->id]);
 }
 function bch_mail($r) {
     if (!bch_settings()['mail'] || !is_email($r->email)) return;

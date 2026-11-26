@@ -48,6 +48,10 @@ function bch_admin_settings() {
         $s['policy']=sanitize_textarea_field(wp_unslash($_POST['policy']??BCH_POLICY));
         $s['free_upgrade']=isset($_POST['free_upgrade'])?1:0;
         $s['live']=isset($_POST['live'])?1:0; $s['mail']=isset($_POST['mail'])?1:0;
+        $s['reception_mail']=isset($_POST['reception_mail'])?1:0;
+        $reception_email=trim(wp_unslash($_POST['reception_email']??''));
+        if (($reception_email!=='' && !is_email($reception_email)) || ($s['reception_mail'] && $reception_email==='')) throw new RuntimeException('Vui lòng nhập một địa chỉ email lễ tân hợp lệ.');
+        $s['reception_email']=sanitize_email($reception_email);
         update_option('bch_settings',$s);
         echo '<div class="notice notice-success"><p>Đã lưu cấu hình.</p></div>';
         } catch (Throwable $e) { bch_admin_error($e); }
@@ -63,6 +67,8 @@ function bch_admin_settings() {
     bch_admin_input('hours','Thời gian giữ chỗ (1–48 giờ; mặc định: 2)',$s['hours'],'number');
     echo '<p><label>Chính sách bổ sung<br><textarea name="policy" rows="6" cols="80">'.esc_textarea($s['policy']).'</textarea></label></p>';
     foreach (['free_upgrade'=>'Cho phép nâng hạng miễn phí khi hết phòng: 1 giường đôi → 2 giường đôi (khách phải đồng ý)','live'=>'Mở nhận giữ chỗ thật (đã kiểm tra ngân hàng và tồn phòng)','mail'=>'Gửi email (đã cấu hình SMTP và thử nhận thư)'] as $k=>$label) echo '<p><label><input type="checkbox" name="'.esc_attr($k).'" value="1" '.checked($s[$k],1,false).'>'.esc_html($label).'</label></p>';
+    echo '<h2>Email báo đơn mới cho lễ tân</h2><p><label>Email lễ tân<br><input class="regular-text" type="email" name="reception_email" value="'.esc_attr($s['reception_email']).'"></label></p>';
+    echo '<p><label><input type="checkbox" name="reception_mail" value="1" '.checked($s['reception_mail'],1,false).'> Gửi email cho lễ tân khi có đơn mới từ website</label></p><p class="description">Gửi ngay sau khi lưu đơn thành công, kể cả khách không nhập email. Hoạt động độc lập với email gửi khách. Cần cấu hình SMTP và kiểm tra nhận thư trên hosting trước khi sử dụng.</p>';
     submit_button(); echo '</form></div>';
 }
 function bch_admin_rooms() {
@@ -171,6 +177,7 @@ function bch_admin_bookings() {
     echo '</p><table class="widefat striped"><thead><tr><th>Đơn / khách</th><th>Lưu trú</th><th>Tiền / trạng thái</th><th>Thao tác</th></tr></thead><tbody>';
     foreach ($rows as $r) {
         echo '<tr><td><strong>'.esc_html($r->code).'</strong><br>'.esc_html(($r->source??'website')==='counter'?'Tại quầy · User #'.$r->created_by:'Website').'<br>Tạo lúc '.esc_html(wp_date('d/m/Y H:i',strtotime($r->created_at.' UTC'),new DateTimeZone('Asia/Ho_Chi_Minh'))).'<br>'.esc_html($r->name).'<br>'.esc_html($r->phone).'<br>'.esc_html($r->email).'</td><td>'.esc_html($r->room_name).'<br>'.esc_html(bch_upgrade_description($r)).'<br>'.esc_html(bch_stay_label($r)).'<br>'.esc_html($r->guests).' khách</td><td>'.esc_html(bch_status($r->status)).'<br>Tổng '.esc_html(bch_money($r->total)).'<br>Cọc '.esc_html(bch_money($r->deposit)).'<br>Hạn: '.esc_html(wp_date('d/m/Y H:i',strtotime($r->expires_at.' UTC'),new DateTimeZone('Asia/Ho_Chi_Minh'))).'<br>Email: '.($r->mail_sent?'đã gửi':'chưa gửi / lỗi');
+        echo '<br>Email lễ tân: '.([0=>'chưa gửi',1=>'đã gửi',2=>'gửi lỗi'][(int)($r->reception_mail_status??0)]??'chưa gửi');
         if ($r->confirmed_at) echo '<br>Xác nhận: '.esc_html(wp_date('d/m/Y H:i',strtotime($r->confirmed_at.' UTC'),new DateTimeZone('Asia/Ho_Chi_Minh'))).' · User #'.esc_html($r->confirmed_by);
         if ($r->status==='checked_in') echo '<br><strong>Đã thu đủ tiền phòng</strong><br>Thu khi nhận phòng: '.esc_html(bch_money($r->balance_paid)).'<br>Nhận phòng: '.esc_html(wp_date('d/m/Y H:i',strtotime($r->checked_in_at.' UTC'),new DateTimeZone('Asia/Ho_Chi_Minh'))).' · User #'.esc_html($r->checked_in_by);
         echo '<br>Còn lại sau cọc: '.esc_html(bch_money(bch_balance_due($r)));
