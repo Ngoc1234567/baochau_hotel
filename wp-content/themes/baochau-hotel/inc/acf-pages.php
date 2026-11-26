@@ -53,6 +53,14 @@ function bch_acf_groups() {
         $f('bch_home_contact_title','Tiêu đề liên hệ','textarea'),$f('bch_home_contact','Thông tin liên hệ','textarea'),
         $f('bch_home_contact_photo','Ảnh khu vực liên hệ','image'),$f('bch_home_contact_cta','Chữ nút đặt phòng'),
     ];
+    // Six individual image fields work with the free version of ACF.
+    $gallery_fields=[$f('bch_home_tab_gallery','Hình ảnh khách sạn','tab')];
+    for ($i=1;$i<=6;$i++) {
+        $gallery_fields[]=$f('bch_home_gallery_'.$i,'Ảnh khách sạn '.$i,'image',[
+            'instructions'=>'Ảnh hiển thị theo thứ tự 1–6. Để trống để bỏ qua. Chú thích và văn bản thay thế lấy từ Thư viện Media.',
+        ]);
+    }
+    array_splice($home,array_search('bch_home_tab_services',array_column($home,'name'),true),0,$gallery_fields);
     $groups[]=['key'=>'group_bch_home','title'=>'Bảo Châu — Thiết kế trang chủ','fields'=>$home,'location'=>[[['param'=>'page_type','operator'=>'==','value'=>'front_page']]],'hide_on_screen'=>['the_content']];
     $groups[]=['key'=>'group_bch_about','title'=>'Bảo Châu — Ảnh & nút giới thiệu','fields'=>[
         $f('bch_about_photo','Ảnh giới thiệu','image'),$f('bch_about_cta_label','Chữ nút'),$f('bch_about_cta_url','Liên kết nút','url',['instructions'=>'Để trống để mở trang Phòng nghỉ.']),

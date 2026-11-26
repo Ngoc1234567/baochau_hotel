@@ -123,3 +123,73 @@ document.querySelectorAll('.booking-search, .reservation-form').forEach(form => 
     trigger?.focus({ preventScroll: true });
   });
 })();
+
+
+// Hotel photographs open as one keyboard- and touch-accessible collection.
+(() => {
+  const gallery = document.querySelector('[data-hotel-gallery]');
+  if (!gallery || typeof HTMLDialogElement === 'undefined' ||
+      typeof HTMLDialogElement.prototype.showModal !== 'function') return;
+  const photos = [...gallery.querySelectorAll('[data-hotel-photo]')];
+  if (!photos.length) return;
+  const modal = document.createElement('dialog');
+  modal.className = 'hotel-gallery-dialog';
+  modal.setAttribute('aria-label', 'Hình ảnh khách sạn');
+  modal.innerHTML = '<div class="hotel-gallery-toolbar"><span aria-live="polite" data-photo-count></span><button type="button" data-photo-close autofocus>Đóng ×</button></div><div class="hotel-gallery-stage"><button type="button" data-photo-prev aria-label="Ảnh trước">‹</button><img alt=""><button type="button" data-photo-next aria-label="Ảnh tiếp theo">›</button></div><p class="hotel-gallery-caption"></p>';
+  document.body.append(modal);
+  const image = modal.querySelector('img');
+  const caption = modal.querySelector('.hotel-gallery-caption');
+  const count = modal.querySelector('[data-photo-count]');
+  let current = 0;
+  let trigger;
+  const show = index => {
+    current = (index + photos.length) % photos.length;
+    image.src = photos[current].href;
+    image.alt = photos[current].querySelector('img').alt;
+    caption.textContent = photos[current].dataset.caption || '';
+    caption.hidden = !caption.textContent;
+    count.textContent = `Ảnh ${current + 1} / ${photos.length}`;
+  };
+  photos.forEach((photo, index) => photo.addEventListener('click', event => {
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    trigger = photo;
+    show(index);
+    modal.showModal();
+    document.documentElement.classList.add('hotel-gallery-open');
+  }));
+  modal.querySelector('[data-photo-close]').addEventListener('click', () => modal.close());
+  const previous = modal.querySelector('[data-photo-prev]');
+  const next = modal.querySelector('[data-photo-next]');
+  previous.hidden = next.hidden = photos.length < 2;
+  previous.addEventListener('click', () => show(current - 1));
+  next.addEventListener('click', () => show(current + 1));
+  modal.addEventListener('keydown', event => {
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      show(current + (event.key === 'ArrowLeft' ? -1 : 1));
+    }
+  });
+  let touch;
+  image.addEventListener('touchstart', event => {
+    touch = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null;
+  }, { passive: true });
+  image.addEventListener('touchend', event => {
+    if (!touch || event.touches.length || event.changedTouches.length !== 1) { touch = null; return; }
+    const dx = event.changedTouches[0].clientX - touch.x;
+    const dy = event.changedTouches[0].clientY - touch.y;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) show(current + (dx < 0 ? 1 : -1));
+    touch = null;
+  }, { passive: true });
+  image.addEventListener('touchcancel', () => { touch = null; }, { passive: true });
+  modal.addEventListener('click', event => {
+    if (event.target !== modal) return;
+    const bounds = modal.getBoundingClientRect();
+    if (event.clientX < bounds.left || event.clientX > bounds.right ||
+        event.clientY < bounds.top || event.clientY > bounds.bottom) modal.close();
+  });
+  modal.addEventListener('close', () => {
+    document.documentElement.classList.remove('hotel-gallery-open');
+    trigger?.focus({ preventScroll: true });
+  });
+})();

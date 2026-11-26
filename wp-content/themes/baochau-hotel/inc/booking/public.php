@@ -92,7 +92,7 @@ function bch_booking_screen() {
             bch_reservation_form(array_merge($guest,['in'=>$in,'out'=>$out,'guests'=>$guests,'room'=>$room->id]),true);
             echo '</div>'; return ob_get_clean();
         }
-        bch_tariff_panel(false);
+        bch_tariff_panel();
         $in=sanitize_text_field(wp_unslash($_GET['in']??'')); $out=sanitize_text_field(wp_unslash($_GET['out']??'')); $guests=absint($_GET['guests']??2);
         if (!empty($_GET['room'])) [$in,$out]=bch_form_dates($in,$out);
         if (!$in && !$out) {

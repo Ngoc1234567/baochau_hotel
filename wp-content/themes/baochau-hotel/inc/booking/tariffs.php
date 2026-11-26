@@ -16,7 +16,7 @@ function bch_stay_note() {
     return 'Nghỉ ngày đêm: nhận phòng từ 13:00, trả phòng trước hoặc đúng 12:00 ngày trả. Giá tính cho 1 phòng mỗi đêm, trong sức chứa quy định.';
 }
 
-function bch_tariff_panel($show_hourly=true) {
+function bch_tariff_panel() {
     $nights=max(1,min(30,absint($_GET['estimate_nights']??1)));
     $rooms=bch_rooms();
     ?>
@@ -35,29 +35,14 @@ function bch_tariff_panel($show_hourly=true) {
                 <thead><tr><th scope="col">Loại phòng</th><th scope="col">Số người tối đa</th><th scope="col">Ngày đêm</th><th scope="col">Tạm tính <?php echo (int)$nights; ?> đêm</th></tr></thead>
                 <tbody><?php foreach (bch_tariffs() as $tariff):
                     if (!array_filter($rooms,fn($room)=>$room->name===$tariff['name'])) continue;
-                    $price=$tariff['price']; $hourly=$tariff['hourly'];
-                    foreach ($rooms as $room) if ($room->name===$tariff['name']) { $price=(int)$room->price; $hourly=(int)$room->hourly_price; break; }
+                    $price=$tariff['price'];
+                    foreach ($rooms as $room) if ($room->name===$tariff['name']) { $price=(int)$room->price; break; }
                     ?><tr><th scope="row"><?php echo esc_html($tariff['name']); ?></th><td><?php echo (int)$tariff['capacity']; ?></td><td><?php echo esc_html(bch_money($price)); ?></td><td><strong><?php echo esc_html(bch_money($price*$nights)); ?></strong></td></tr>
                 <?php endforeach; ?></tbody>
             </table>
         </div>
         <p class="tariff-footnote">Tạm tính theo giá cơ bản, chưa giữ phòng. Giá theo ngày cụ thể và phòng trống được kiểm tra khi đặt ngày đêm. Khoản cọc hiện tại là 30% tổng tiền phòng.</p>
         <p><a class="button" href="#thong-tin-dat-phong">Đặt phòng qua đêm ↓</a></p>
-        <?php if ($show_hourly): ?>
-        <section class="hourly-tariffs" id="nghi-theo-gio" aria-labelledby="hourly-title">
-            <h3 id="hourly-title">Nghỉ theo giờ</h3>
-            <div class="tariff-scroll" role="region" aria-label="Bảng giá nghỉ theo giờ" tabindex="0">
-                <table class="tariff-table">
-                    <caption>Giá 2 giờ đầu cho 1 phòng · VNĐ</caption>
-                    <thead><tr><th scope="col">Loại phòng</th><th scope="col">Giá 2 giờ đầu</th><th scope="col">Thời gian</th></tr></thead>
-                    <tbody><?php foreach ($rooms as $room): ?>
-                        <tr><th scope="row"><?php echo esc_html($room->name); ?></th><td><strong><?php echo esc_html((int)$room->hourly_price>0?bch_money($room->hourly_price):'Liên hệ'); ?></strong></td><td>02 giờ</td></tr>
-                    <?php endforeach; ?></tbody>
-                </table>
-            </div>
-            <div class="hourly-contact"><div><p>Giá áp dụng cho 2 giờ đầu. Sau đó thu thêm <strong>30.000đ/giờ</strong>, giờ lẻ làm tròn lên giờ tiếp theo. Vui lòng liên hệ lễ tân để kiểm tra phòng và giờ nhận/trả. Website hiện chỉ nhận đặt ngày đêm.</p></div><a class="button" href="<?php echo esc_url(bch_page_url('lien-he')); ?>">Liên hệ đặt phòng theo giờ</a></div>
-        </section>
-        <?php endif; ?>
         <div class="tariff-contact-note">
             <p><em>* Giá phòng trên chưa có VAT; Quý khách có nhu cầu lấy hóa đơn GTGT, xin vui lòng báo cho Lễ tân khi làm thủ tục nhận phòng.</em></p>
             <p><strong>Địa chỉ:</strong> Số nhà 31, tổ dân phố Trần Can, phường Điện Biên Phủ, tỉnh Điện Biên.</p>
