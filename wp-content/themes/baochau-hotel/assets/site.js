@@ -60,7 +60,7 @@ document.querySelectorAll('.booking-search, .reservation-form').forEach(form => 
   scope.classList.add('home-motion');
   if (preference.matches || !('IntersectionObserver' in window)) return;
 
-  const targets = [...scope.querySelectorAll('.home-search-band h2, .booking-search, .intro > div, .section-head, .inventory-summary, .room-card, .services > .wrap > .eyebrow, .services > .wrap > h2, .service, .hotel-photo, .contact-art, .contact-copy')];
+  const targets = [...scope.querySelectorAll('.home-search-band h2, .booking-search, .intro > div, .section-head, .inventory-summary, .room-card, .services > .wrap > .eyebrow, .services > .wrap > h2, .service, .hotel-photo, .contact-art, .contact-copy, .hotel-gallery-item')];
   const reveal = target => {
     target.classList.add('is-revealed');
     observer.unobserve(target);
