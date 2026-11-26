@@ -128,8 +128,12 @@ input[type=checkbox]{width:24px;height:24px;vertical-align:middle;margin:0 10px 
 .room-breadcrumb{display:flex;align-items:center;flex-wrap:wrap;gap:12px;font-size:14px;color:var(--muted);margin-bottom:28px}
 .room-breadcrumb a{display:inline-flex;align-items:center;min-height:44px}
 .room-detail-top{display:grid;grid-template-columns:minmax(0,1.06fr) minmax(0,1fr);gap:44px;align-items:start}
-.room-photo-panel,.room-information{min-width:0}
-.room-photo-panel{position:sticky;top:116px}
+.room-photo-column,.room-photo-panel,.room-information{min-width:0}
+.room-photo-panel{position:static}
+.room-photo-column .checkout-summary{margin-top:24px;padding:28px;background:#f7efe2;border-radius:8px;overflow-wrap:anywhere}
+.room-detail-page .checkout--form-only{display:block;margin-top:24px}
+.room-detail-page .checkout--form-only .manual-deposit{margin-top:0}
+
 .room-photo-large{display:block;border-radius:12px;overflow:hidden;background:var(--cream);border:1px solid var(--line)}
 .room-photo-large img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:contain}
 .room-thumbnails{display:flex;gap:12px;padding:12px 4px;overflow-x:auto}

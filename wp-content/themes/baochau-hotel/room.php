@@ -10,6 +10,7 @@ get_header(); ?>
 <main id="main" class="wrap page-main room-detail-page">
 <nav class="room-breadcrumb" aria-label="Đường dẫn"><a href="<?php echo esc_url(home_url('/')); ?>">Trang chủ</a><span aria-hidden="true">/</span><a href="<?php echo esc_url(bch_page_url('phong-nghi')); ?>">Phòng nghỉ</a><span aria-hidden="true">/</span><span aria-current="page"><?php echo esc_html($room->name); ?></span></nav>
 <div class="room-detail-top">
+<div class="room-photo-column">
 <section class="room-photo-panel" aria-label="Thư viện ảnh phòng" data-room-gallery>
 <a class="room-photo-large" href="<?php echo esc_url($images[0]); ?>" target="_blank" rel="noopener" aria-label="Mở ảnh phòng kích thước đầy đủ"><img data-gallery-main src="<?php echo esc_url($images[0]); ?>" alt="<?php echo esc_attr($room->name.($illustration?'':' — ảnh 1')); ?>" fetchpriority="high"></a>
 <?php if (count($images)>1): ?><div class="room-thumbnails" aria-label="Chọn ảnh phòng"><?php foreach ($images as $index=>$url): ?><a href="<?php echo esc_url($url); ?>" data-gallery-thumb aria-label="Xem ảnh <?php echo (int)$index+1; ?>" aria-current="<?php echo $index===0?'true':'false'; ?>"><img src="<?php echo esc_url($url); ?>" alt="<?php echo esc_attr($room->name.' — ảnh '.($index+1)); ?>" loading="lazy"></a><?php endforeach; ?></div><?php endif; ?>
@@ -20,12 +21,6 @@ get_header(); ?>
 <?php break; endif; endforeach; ?>
 <div class="room-photo-note"><span aria-hidden="true">◇</span><div><strong>Đặt trực tiếp với Bảo Châu</strong><p>Kiểm tra phòng trống theo ngày. Xem đầy đủ tiền phòng và cọc 30% trước khi giữ chỗ.</p></div></div>
 </section>
-<section class="room-information" aria-labelledby="room-name">
-<p class="eyebrow">BẢO CHÂU HOTEL </p>
-<h1 id="room-name"><?php echo esc_html($room->name); ?></h1>
-<ul class="room-facts"><li><strong><?php echo esc_html($room->capacity); ?></strong><span>Khách tối đa</span></li><li><strong><?php echo (int)$room->area>0?esc_html($room->area).' m²':'Đang cập nhật'; ?></strong><span>Diện tích</span></li><li><strong><?php echo esc_html($room->bed); ?></strong><span>Loại giường</span></li></ul>
-<h2 class="room-amenities-heading">Tiện nghi trong phòng</h2><ul class="room-amenities"><?php foreach ($amenities as $amenity) echo '<li><span aria-hidden="true">✓</span> '.esc_html($amenity).'</li>'; ?></ul>
-<?php bch_stock_badge($room); ?><div class="room-rate"><span>Giá ngày đêm</span><p><strong><?php echo esc_html(bch_money($room->price)); ?></strong> / đêm</p><small>Giá từng đêm và tình trạng phòng được kiểm tra khi chọn ngày ở.</small></div>
 <?php if ((int)$room->quantity>0): ?>
 <?php if (!bch_ready()): ?><p class="room-demo-notice">Bạn có thể kiểm tra giá; hiện chưa nhận giữ chỗ trực tuyến.</p><?php endif; ?>
 <div id="room-reservation"><?php bch_reservation_form([
@@ -33,8 +28,25 @@ get_header(); ?>
     'in'=>sanitize_text_field(wp_unslash($_GET['in']??'')),
     'out'=>sanitize_text_field(wp_unslash($_GET['out']??'')),
     'guests'=>absint($_GET['guests']??2),
-],false,true); ?></div>
+],false,true,'summary'); ?></div>
 <?php else: ?><p class="notice">Hạng phòng hiện tạm ngừng nhận đặt. Vui lòng chọn phòng khác hoặc liên hệ lễ tân.</p><?php endif; ?>
+</div>
+<section class="room-information" aria-labelledby="room-name">
+<p class="eyebrow">BẢO CHÂU HOTEL </p>
+<h1 id="room-name"><?php echo esc_html($room->name); ?></h1>
+<ul class="room-facts"><li><strong><?php echo esc_html($room->capacity); ?></strong><span>Khách tối đa</span></li><li><strong><?php echo (int)$room->area>0?esc_html($room->area).' m²':'Đang cập nhật'; ?></strong><span>Diện tích</span></li><li><strong><?php echo esc_html($room->bed); ?></strong><span>Loại giường</span></li></ul>
+<h2 class="room-amenities-heading">Tiện nghi trong phòng</h2><ul class="room-amenities"><?php foreach ($amenities as $amenity) echo '<li><span aria-hidden="true">✓</span> '.esc_html($amenity).'</li>'; ?></ul>
+<?php bch_stock_badge($room); ?><div class="room-rate"><span>Giá ngày đêm</span><p><strong><?php echo esc_html(bch_money($room->price)); ?></strong> / đêm</p><small>Giá từng đêm và tình trạng phòng được kiểm tra khi chọn ngày ở.</small></div>
+<?php if ((int)$room->quantity>0): ?>
+<div class="room-checkout-form"><?php bch_reservation_form([
+    'room'=>$room->id,
+    'in'=>sanitize_text_field(wp_unslash($_GET['in']??'')),
+    'out'=>sanitize_text_field(wp_unslash($_GET['out']??'')),
+    'guests'=>absint($_GET['guests']??2),
+],false,true,'form'); ?></div>
+<?php endif; ?>
+
+
 </section>
 </div>
 <section class="room-description" aria-labelledby="room-description-title"><h2 id="room-description-title">Mô tả chi tiết</h2><div class="room-description-grid"><div><p><?php echo nl2br(esc_html($room->description)); ?></p><h3>Thông tin lưu trú</h3><p><?php echo esc_html(bch_stay_note()); ?></p><p>Phòng dành cho tối đa <?php echo esc_html($room->capacity); ?> khách, diện tích <?php echo (int)$room->area>0?esc_html($room->area).' m²':'Đang cập nhật'; ?>, <?php echo esc_html($room->bed); ?>. Vui lòng tính tất cả người lưu trú vào số khách.</p></div><div><h3>Chính sách đặt phòng</h3><p>Cọc 30% tổng tiền phòng qua chuyển khoản. Thời hạn giữ chỗ: <?php echo esc_html(bch_settings()['hours']); ?> giờ. Đặt phòng được xác nhận khi khách sạn đối chiếu đủ cọc.</p><a href="<?php echo esc_url(get_permalink(get_option('bch_policy_page'))); ?>">Xem đầy đủ chính sách đặt cọc</a></div></div></section>

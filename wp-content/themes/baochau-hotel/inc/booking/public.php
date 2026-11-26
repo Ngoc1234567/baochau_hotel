@@ -128,14 +128,20 @@ function bch_booking_screen() {
     }
     echo '</div>'; return ob_get_clean();
 }
-function bch_checkout($room,$q,$in,$out,$guests,$guest=[]) {
+function bch_checkout_summary($room,$q,$in,$out,$guests,$title='KỲ NGHỈ CỦA BẠN') {
+    echo '<section class="checkout-summary"><p class="eyebrow">'.esc_html($title).'</p><h2>'.esc_html($room->name).'</h2><p>'.esc_html($in.' → '.$out).' · '.esc_html($guests).' khách</p><details><summary>Chi tiết giá từng đêm</summary><ul>';
+    foreach ($q['nightly'] as $day=>$price) echo '<li>'.esc_html($day).' — '.esc_html(bch_money($price)).'</li>';
+    echo '</ul></details><p>Giá dự kiến <strong>'.esc_html(bch_money($q['total'])).'</strong></p><p>Cọc 30% <strong>'.esc_html(bch_money($q['deposit'])).'</strong></p><p>Còn lại '.esc_html(bch_money($q['total']-$q['deposit'])).'</p><p>Thời hạn giữ chỗ: '.esc_html(bch_settings()['hours']).' giờ kể từ khi tạo đơn.</p></section>';
+}
+function bch_checkout($room,$q,$in,$out,$guests,$guest=[],$part='all') {
+    if ($part==='summary') { bch_checkout_summary($room,$q,$in,$out,$guests,'THÔNG TIN PHÒNG'); return; }
     $allocated=bch_allocation($room,bch_dates($in,$out),$guests);
     $upgraded=(int)$allocated->id!==(int)$room->id;
     if ($upgraded) bch_upgrade_notice($room,$allocated,$q,$guests);
     echo '<p class="notice">'.esc_html(bch_stay_note()).'</p>';
-    echo '<div id="thong-tin-dat-phong" class="checkout"><section><p class="eyebrow">KỲ NGHỈ CỦA BẠN</p><h2>'.esc_html($room->name).'</h2><p>'.esc_html($in.' → '.$out).' · '.esc_html($guests).' khách</p><details><summary>Chi tiết giá từng đêm</summary><ul>';
-    foreach ($q['nightly'] as $day=>$price) echo '<li>'.esc_html($day).' — '.esc_html(bch_money($price)).'</li>';
-    echo '</ul></details><p>Giá dự kiến <strong>'.esc_html(bch_money($q['total'])).'</strong></p><p>Cọc 30% <strong>'.esc_html(bch_money($q['deposit'])).'</strong></p><p>Còn lại '.esc_html(bch_money($q['total']-$q['deposit'])).'</p><p>Thời hạn giữ chỗ: '.esc_html(bch_settings()['hours']).' giờ kể từ khi tạo đơn.</p></section><form method="post" action="'.esc_url(bch_url()).'" class="guest-form">';
+    echo '<div id="thong-tin-dat-phong" class="checkout'.($part==='form'?' checkout--form-only':'').'">';
+    if ($part!=='form') bch_checkout_summary($room,$q,$in,$out,$guests);
+    echo '<form method="post" action="'.esc_url(bch_url()).'" class="guest-form">';
     $bank=bch_settings();
     echo '<div class="manual-deposit"><h3>Thông tin chuyển khoản cọc</h3><dl>';
     foreach (['Ngân hàng'=>$bank['bank'],'Số tài khoản'=>$bank['account'],'Chủ tài khoản'=>$bank['holder'],'Tiền cọc (30%)'=>bch_money($q['deposit'])] as $label=>$value) echo '<dt>'.esc_html($label).'</dt><dd>'.esc_html($value).'</dd>';
@@ -148,8 +154,8 @@ function bch_checkout($room,$q,$in,$out,$guests,$guest=[]) {
     if ($upgraded) echo '<label class="consent upgrade-consent"><input type="checkbox" name="upgrade_consent" value="1" required> Tôi đồng ý đổi sang '.esc_html($allocated->name).', giữ nguyên giá và tối đa '.esc_html($room->capacity).' khách.</label>';
     echo '<h2>Thông tin khách</h2><label>Họ tên<input name="guest_name" autocomplete="name" maxlength="190" value="'.esc_attr($guest['name']??'').'" required></label><label>Số điện thoại (Zalo)<input type="tel" name="phone" autocomplete="tel" maxlength="25" value="'.esc_attr($guest['phone']??'').'" required></label><label>Email (không bắt buộc)<input type="email" name="email" autocomplete="email" maxlength="190" value="'.esc_attr($guest['email']??'').'"></label><p>'.esc_html(BCH_POLICY).'</p><label class="consent"><input type="checkbox" name="agree" required> Tôi đồng ý <a href="'.esc_url(get_permalink(get_option('bch_policy_page'))).'">chính sách đặt cọc</a>.</label><button '.disabled(bch_ready(),false,false).'>'.($upgraded?'Đồng ý đổi phòng & giữ chỗ':'Giữ chỗ').' · Cọc '.esc_html(bch_money($q['deposit'])).'</button></form></div>';
 }
-function bch_reservation_form($values=[],$collapsed=false,$compact=false) {
-    bch_recent_booking_links();
+function bch_reservation_form($values=[],$collapsed=false,$compact=false,$checkout_part='all') {
+    if ($checkout_part!=='summary') bch_recent_booking_links();
     if (!array_filter(bch_rooms(),fn($room)=>(int)$room->quantity>0)) { echo '<p id="thong-tin-dat-phong" class="notice">Các hạng phòng chưa mở đặt online. Vui lòng liên hệ lễ tân để kiểm tra phòng trống.</p>'; return; }
     $v=wp_parse_args($values,['name'=>'','phone'=>'','email'=>'','in'=>'','out'=>'','guests'=>2,'room'=>0]);
     $fixed_room=$compact?bch_room(absint($v['room'])):null;
@@ -158,7 +164,7 @@ function bch_reservation_form($values=[],$collapsed=false,$compact=false) {
     if ($fixed_room) {
         try {
             $quote=bch_price($fixed_room,bch_dates($v['in'],$v['out']),$v['guests']);
-            bch_checkout($fixed_room,$quote,$v['in'],$v['out'],$v['guests'],$v);
+            bch_checkout($fixed_room,$quote,$v['in'],$v['out'],$v['guests'],$v,$checkout_part);
         } catch (Throwable $e) { echo '<p class="notice error" role="alert">'.esc_html($e->getMessage()).'</p>'; }
         return;
     }
