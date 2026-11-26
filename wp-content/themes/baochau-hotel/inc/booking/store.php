@@ -223,12 +223,17 @@ function bch_transition($id,$action,$balance_verified=false) {
 }
 function bch_booking_trash($id,$action) {
     if (!current_user_can('bch_manage_bookings')) throw new RuntimeException('Bạn không có quyền quản lý đơn.');
-    if (!in_array($action,['trash','restore'],true)) throw new InvalidArgumentException('Thao tác không hợp lệ.');
+    if (!in_array($action,['trash','restore','delete'],true)) throw new InvalidArgumentException('Thao tác không hợp lệ.');
     return bch_atomic(function () use ($id,$action) {
         global $wpdb; bch_expire_rows(); $table=bch_table('bookings');
         $row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id=%d",$id));
         if (!$row) throw new RuntimeException('Không tìm thấy đơn.');
         if (!in_array($row->status,['cancelled','expired'],true)) throw new RuntimeException('Chỉ xóa đơn đã hủy hoặc hết hạn. Không xóa đơn đang giữ chỗ hoặc đã nhận phòng.');
+        if ($action==='delete') {
+            if (!$row->deleted_at) throw new RuntimeException('Chỉ xóa vĩnh viễn đơn đã ở trong thùng rác.');
+            if ($wpdb->delete($table,['id'=>$id,'status'=>$row->status,'deleted_at'=>$row->deleted_at])!==1) throw new RuntimeException('Không xóa được đơn. Vui lòng tải lại trang và thử lại.');
+            return $row;
+        }
         if (($action==='trash' && $row->deleted_at) || ($action==='restore' && !$row->deleted_at)) return $row;
         $changes=$action==='trash'?['deleted_at'=>gmdate('Y-m-d H:i:s'),'deleted_by'=>get_current_user_id()]:['deleted_at'=>null,'deleted_by'=>null];
         if ($wpdb->update($table,$changes,['id'=>$id])===false) throw new RuntimeException('Không cập nhật được thùng rác.');

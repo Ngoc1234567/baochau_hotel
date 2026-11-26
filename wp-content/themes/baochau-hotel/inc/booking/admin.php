@@ -159,10 +159,12 @@ function bch_admin_bookings() {
         try {
             $action=sanitize_key($_POST['action']??'');
             if ($action==='confirm' && empty($_POST['verified'])) throw new RuntimeException('Cần xác nhận đã đối chiếu và nhận đủ cọc.');
-            $trash_action=in_array($action,['trash','restore'],true);
+            if ($action==='delete' && empty($_POST['delete_verified'])) throw new RuntimeException('Vui lòng xác nhận xóa vĩnh viễn đơn. Thao tác này không thể khôi phục.');
+            $trash_action=in_array($action,['trash','restore','delete'],true);
             $r=$trash_action?bch_booking_trash(absint($_POST['id']??0),$action):bch_transition(absint($_POST['id']??0),$action,!empty($_POST['balance_verified']));
             if (!$r) throw new RuntimeException('Trạng thái không cho phép thao tác. Đơn hết hạn không được khôi phục; hãy kiểm tra tồn trước khi tạo đơn mới.');
-            if (!$trash_action) bch_mail($r); echo '<div class="notice notice-success"><p>Đã cập nhật đơn.</p></div>';
+            if (!$trash_action) bch_mail($r);
+            echo '<div class="notice notice-success"><p>'.($action==='delete'?'Đã xóa vĩnh viễn đơn.':'Đã cập nhật đơn.').'</p></div>';
         } catch (Throwable $e) { bch_admin_error($e); }
     }
     bch_expire(); global $wpdb;
@@ -191,6 +193,10 @@ function bch_admin_bookings() {
         if ($trash || in_array($r->status,['cancelled','expired'],true)) {
             echo '<form method="post">'; wp_nonce_field('bch_booking_action');
             echo '<input type="hidden" name="id" value="'.esc_attr($r->id).'"><button class="button" name="action" value="'.($trash?'restore':'trash').'">'.($trash?'Khôi phục':'Xóa').'</button></form>';
+            if ($trash && in_array($r->status,['cancelled','expired'],true)) {
+                echo '<form method="post">'; wp_nonce_field('bch_booking_action');
+                echo '<input type="hidden" name="id" value="'.esc_attr($r->id).'"><input type="hidden" name="action" value="delete"><p><label><input type="checkbox" name="delete_verified" value="1" required> Tôi xác nhận xóa vĩnh viễn đơn '.esc_html($r->code).', không thể khôi phục.</label></p><button class="button button-link-delete">Xóa vĩnh viễn</button></form>';
+            }
         } elseif (!$trash) echo '<p class="description">Chỉ xóa đơn đã hủy hoặc hết hạn.</p>';
         echo '</td></tr>';
     }
