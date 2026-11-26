@@ -305,7 +305,7 @@ button,.button,.card-actions>a,.card-actions .button{font-size:18px}
 .hero--artwork .button.light{min-height:52px;gap:24px;padding:12px 22px;background:var(--gold);border-color:var(--gold);border-radius:8px;color:var(--ink);font-size:16px;font-weight:600}
 .hero--artwork .button.light:hover{background:#dfbc78;border-color:#dfbc78}
 @media(min-width:981px){
-  .hero--artwork .hero-content{position:absolute;inset:auto 0 clamp(24px,3vw,56px);width:100%;padding:0 5%;background:transparent;border:0;pointer-events:none}
+  .hero--artwork .hero-content{position:absolute;inset:63% auto auto 0;width:50%;padding:0 24px;justify-content:center;background:transparent;border:0;pointer-events:none}
   .hero--artwork .hero-links{pointer-events:auto}
   .hero--artwork .button.light{box-shadow:0 4px 20px #241c1640;border-color:#edcf8d}
 }
