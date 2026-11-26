@@ -236,12 +236,14 @@ function bch_booking_trash($id,$action) {
     });
 }
 function bch_balance_due($r) { return max(0,(int)$r->total-(int)$r->deposit-(int)($r->balance_paid??0)); }
-function bch_receipt_text($r) {
+function bch_receipt_text($r,$for_reception=false) {
     $bank=json_decode($r->bank,true); $tz=new DateTimeZone('Asia/Ho_Chi_Minh');
     $upgrade=bch_upgrade_description($r);
     $stay_text=bch_stay_label($r);
-    if ($r->status==='checked_in') return "$upgrade\nMã: $r->code\nTrạng thái: Đã nhận phòng\nPhòng: $r->room_name\n$stay_text\nTổng tiền phòng: ".bch_money($r->total)."\nĐã thu đủ tiền phòng.\nThu khi nhận phòng: ".bch_money($r->balance_paid)."\nCòn lại: ".bch_money(bch_balance_due($r))."\nNhận phòng lúc: ".wp_date('d/m/Y H:i',strtotime($r->checked_in_at.' UTC'),$tz)." (giờ Việt Nam)\n".bch_settings()['contact'];
-    return "$upgrade\nMã: $r->code\nTrạng thái: ".bch_status($r->status)."\nPhòng: $r->room_name\n$stay_text\nTổng: ".bch_money($r->total)."\nCọc 30%: ".bch_money($r->deposit)."\nCòn lại: ".bch_money(bch_balance_due($r))."\nNgân hàng: {$bank['bank']}\nChủ tài khoản: {$bank['holder']}\nSố tài khoản: {$bank['account']}\nNội dung chuyển khoản: $r->code\nHạn giữ chỗ: ".wp_date('d/m/Y H:i',strtotime($r->expires_at.' UTC'),$tz)." (giờ Việt Nam)\n".BCH_POLICY."\n".bch_settings()['contact'];
+    $contact=$for_reception?'':"\n".bch_settings()['contact'];
+    $policy=$for_reception?'':"\n".BCH_POLICY;
+    if ($r->status==='checked_in') return "$upgrade\nMã: $r->code\nTrạng thái: Đã nhận phòng\nPhòng: $r->room_name\n$stay_text\nTổng tiền phòng: ".bch_money($r->total)."\nĐã thu đủ tiền phòng.\nThu khi nhận phòng: ".bch_money($r->balance_paid)."\nCòn lại: ".bch_money(bch_balance_due($r))."\nNhận phòng lúc: ".wp_date('d/m/Y H:i',strtotime($r->checked_in_at.' UTC'),$tz)." (giờ Việt Nam)".$contact;
+    return "$upgrade\nMã: $r->code\nTrạng thái: ".bch_status($r->status)."\nPhòng: $r->room_name\n$stay_text\nTổng: ".bch_money($r->total)."\nCọc 30%: ".bch_money($r->deposit)."\nCòn lại: ".bch_money(bch_balance_due($r))."\nNgân hàng: {$bank['bank']}\nChủ tài khoản: {$bank['holder']}\nSố tài khoản: {$bank['account']}\nNội dung chuyển khoản: $r->code\nHạn giữ chỗ: ".wp_date('d/m/Y H:i',strtotime($r->expires_at.' UTC'),$tz)." (giờ Việt Nam)".$policy.$contact;
 }
 function bch_reception_mail($r) {
     $s=bch_settings();
@@ -251,7 +253,7 @@ function bch_reception_mail($r) {
     try {
         $body="Có yêu cầu đặt phòng mới từ website. Vui lòng liên hệ khách trong vòng 15 phút.\n\n";
         $body.="Khách hàng: $r->name\nĐiện thoại / Zalo: $r->phone\nEmail: ".($r->email?:'Không cung cấp')."\nSố khách: $r->guests\n\n";
-        $body.=bch_receipt_text($r)."\n\nQuản lý đơn đặt phòng: ".admin_url('admin.php?page=bch-bookings');
+        $body.=bch_receipt_text($r,true)."\n\nQuản lý đơn đặt phòng: ".admin_url('admin.php?page=bch-bookings');
         $sent=wp_mail($s['reception_email'],'[Bảo Châu] Đơn đặt phòng mới '.$r->code,$body);
     } catch (Throwable $e) {
         error_log('BCH: reception email failed for booking '.(int)$r->id);
