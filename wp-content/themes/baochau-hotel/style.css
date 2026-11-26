@@ -296,11 +296,11 @@ button,.button,.card-actions>a,.card-actions .button{font-size:18px}
 .room-card .stock-upgrade, .stock-upgrade { color: #795716; font-size: 13px; }
 
 /* Preserve all lettering baked into the artwork at every screen size. */
-.hero.hero--artwork{display:block;min-height:0;width:100%;height:auto;margin:0;border-radius:0;background:#061837;color:var(--ink)}
+.hero.hero--artwork{display:block;min-height:0;width:100%;height:auto;margin:0;border-radius:0;background:var(--cream);color:var(--ink)}
 .hero--artwork::after{display:none}
-.hero--artwork .hero-image{position:static;display:block;width:100%;max-width:1774px;height:auto;aspect-ratio:2/1;object-fit:contain;margin:0 auto}
+.hero--artwork .hero-image{position:static;display:block;width:100%;max-width:1774px;height:auto;object-fit:contain;margin:0 auto}
 /* The action has its own surface, clear of the artwork's title and landmarks. */
-.hero--artwork .hero-content{display:flex;align-items:center;justify-content:space-between;gap:24px;width:100%;margin:0;padding:24px max(5%,calc((100% - 1200px)/2));background:var(--cream);border-bottom:1px solid var(--line)}
+.hero--artwork .hero-content{display:flex;align-items:center;justify-content:center;gap:24px;width:100%;margin:0;padding:24px max(5%,calc((100% - 1200px)/2));background:var(--cream);border-bottom:1px solid var(--line)}
 .hero--artwork .hero-links{margin:0;flex:none;gap:0}
 .hero--artwork .button.light{min-height:52px;gap:24px;padding:12px 22px;background:var(--gold);border-color:var(--gold);border-radius:8px;color:var(--ink);font-size:16px;font-weight:600}
 .hero--artwork .button.light:hover{background:#dfbc78;border-color:#dfbc78}

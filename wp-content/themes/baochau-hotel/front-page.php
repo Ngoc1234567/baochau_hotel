@@ -7,13 +7,22 @@ $stock_days=bch_dates($stock_in,$stock_out);
 get_header();
 $acf_hero=absint(bch_home_field('image'));
 $hero_url=$acf_hero?wp_get_attachment_image_url($acf_hero,'full'):(get_theme_mod('bch_hero_image')?:get_template_directory_uri().'/assets/retreat.svg');
-$hero_is_artwork = $acf_hero === 30 || (!trim((string)bch_home_field('eyebrow')) && !trim((string)bch_home_field('title')) && !trim((string)bch_home_field('text')));
+// Uploaded homepage banners include their own lettering, regardless of attachment ID.
+$hero_is_artwork = (bool)$acf_hero || (!trim((string)bch_home_field('eyebrow')) && !trim((string)bch_home_field('title')) && !trim((string)bch_home_field('text')));
 $hero_alt=$acf_hero?(get_post_meta($acf_hero,'_wp_attachment_image_alt',true)?:'Không gian khách sạn Bảo Châu'):'Không gian nghỉ dưỡng';
 ?>
 <main id="main" class="home-main">
 <section class="hero<?php if ($hero_is_artwork) echo ' hero--artwork'; ?>">
     <?php if ($hero_is_artwork): ?><h1 class="screen-reader-text"><?php echo esc_html(get_bloginfo('name')); ?> — Khách sạn tại Điện Biên Phủ</h1><?php endif; ?>
-    <img class="hero-image" src="<?php echo esc_url($hero_url); ?>" alt="<?php echo esc_attr($hero_alt); ?>" fetchpriority="high" decoding="async">
+    <?php if ($acf_hero): ?>
+        <?php echo wp_get_attachment_image($acf_hero,'full',false,[
+            'class'=>'hero-image','alt'=>$hero_alt,'loading'=>'eager',
+            'fetchpriority'=>'high','decoding'=>'async',
+            'sizes'=>'(max-width: 1774px) 100vw, 1774px',
+        ]); ?>
+    <?php else: ?>
+        <img class="hero-image" src="<?php echo esc_url($hero_url); ?>" alt="<?php echo esc_attr($hero_alt); ?>" fetchpriority="high" decoding="async">
+    <?php endif; ?>
     <div class="wrap hero-content">
         <?php if (!$hero_is_artwork): ?>
         <p class="eyebrow"><?php echo esc_html(bch_home_field('eyebrow','BẢO CHÂU HOTEL · CHÀO ĐÓN BẠN')); ?></p>
