@@ -18,7 +18,7 @@ $hero_alt=$acf_hero?(get_post_meta($acf_hero,'_wp_attachment_image_alt',true)?:'
         <?php echo wp_get_attachment_image($acf_hero,'full',false,[
             'class'=>'hero-image','alt'=>$hero_alt,'loading'=>'eager',
             'fetchpriority'=>'high','decoding'=>'async',
-            'sizes'=>'(max-width: 1774px) 100vw, 1774px',
+            'sizes'=>'100vw',
         ]); ?>
     <?php else: ?>
         <img class="hero-image" src="<?php echo esc_url($hero_url); ?>" alt="<?php echo esc_attr($hero_alt); ?>" fetchpriority="high" decoding="async">
