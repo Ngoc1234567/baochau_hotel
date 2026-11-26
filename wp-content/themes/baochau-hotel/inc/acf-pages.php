@@ -30,7 +30,7 @@ function bch_acf_groups() {
     $f='bch_acf_field';
     $groups=[];
     $common=[];
-    foreach (['page-gioi-thieu.php','page-phong-nghi.php','page-tien-ich.php','page-lien-he.php'] as $template) $common[]=[['param'=>'page_template','operator'=>'==','value'=>$template]];
+    foreach (['page-gioi-thieu.php','page-phong-nghi.php','page-tien-ich.php','page-lien-he.php','page-chinh-sach.php'] as $template) $common[]=[['param'=>'page_template','operator'=>'==','value'=>$template]];
     $groups[]=['key'=>'group_bch_page','title'=>'Bảo Châu — Nội dung trang','fields'=>[
         $f('bch_page_eyebrow','Dòng nhãn phía trên tiêu đề'),
         $f('bch_page_title','Tiêu đề hiển thị','text',['instructions'=>'Để trống để dùng tên trang WordPress.']),
