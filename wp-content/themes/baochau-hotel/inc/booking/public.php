@@ -138,7 +138,7 @@ function bch_checkout($room,$q,$in,$out,$guests,$guest=[],$part='all') {
     $allocated=bch_allocation($room,bch_dates($in,$out),$guests);
     $upgraded=(int)$allocated->id!==(int)$room->id;
     if ($upgraded) bch_upgrade_notice($room,$allocated,$q,$guests);
-    echo '<p class="notice">'.esc_html(bch_stay_note()).'</p>';
+    if ($part!=='form') echo '<p class="notice">'.esc_html(bch_stay_note()).'</p>';
     echo '<div id="thong-tin-dat-phong" class="checkout'.($part==='form'?' checkout--form-only':'').'">';
     if ($part!=='form') bch_checkout_summary($room,$q,$in,$out,$guests);
     echo '<form method="post" action="'.esc_url(bch_url()).'" class="guest-form">';

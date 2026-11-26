@@ -19,7 +19,6 @@ get_header(); ?>
 <?php foreach ($images as $image_url): $source=get_post_meta(attachment_url_to_postid($image_url),'_bch_image_source',true); if ($source): ?>
 <p class="room-photo-caption">Nguồn ảnh: <a href="<?php echo esc_url($source); ?>" target="_blank" rel="noopener">Sunrise Đà Lạt</a>, không phải ảnh thực tế của Bảo Châu.</p>
 <?php break; endif; endforeach; ?>
-<div class="room-photo-note"><span aria-hidden="true">◇</span><div><strong>Đặt trực tiếp với Bảo Châu</strong><p>Kiểm tra phòng trống theo ngày. Xem đầy đủ tiền phòng và cọc 30% trước khi giữ chỗ.</p></div></div>
 </section>
 <?php if ((int)$room->quantity>0): ?>
 <?php if (!bch_ready()): ?><p class="room-demo-notice">Bạn có thể kiểm tra giá; hiện chưa nhận giữ chỗ trực tuyến.</p><?php endif; ?>
