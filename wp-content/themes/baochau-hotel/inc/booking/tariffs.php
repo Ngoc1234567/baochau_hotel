@@ -61,7 +61,7 @@ function bch_tariff_panel($show_hourly=true) {
         <div class="tariff-contact-note">
             <p><em>* Giá phòng trên chưa có VAT; Quý khách có nhu cầu lấy hóa đơn GTGT, xin vui lòng báo cho Lễ tân khi làm thủ tục nhận phòng.</em></p>
             <p><strong>Địa chỉ:</strong> Số nhà 31, tổ dân phố Trần Can, phường Điện Biên Phủ, tỉnh Điện Biên.</p>
-            <p><strong>Điện thoại lễ tân:</strong> <a href="tel:02153828963">02153.828.963</a>; <a href="tel:0888599968">0888.5999.68</a>; <a href="tel:0912565671">0912.56.56.71</a>.</p>
+            <p><strong>Điện thoại lễ tân:</strong> <a href="tel:0912565671">0912.56.56.71</a>, <a href="tel:0888599968">0888.5999.68</a>, <a href="tel:02153828963">02153.828.963</a>.</p>
             <p><em>Trân trọng cảm ơn quý khách!</em></p>
         </div>
     </section>
