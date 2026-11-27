@@ -52,7 +52,7 @@ function bch_amenities_walk_images($html,$post_id) {
         // Existing inline photos stay attached to their item until replaced in the controls.
         $content=$photo?preg_replace('/<img\b[^>]*>/is','',$match[2]):$match[2];
         if (!preg_match('/<[a-z]/i',$content) && preg_match('/^(\d+)\s+phút\s+đến\s+(.+?)[.!]?\s*$/iu',trim(html_entity_decode($content,ENT_QUOTES,'UTF-8')),$destination)) {
-            $content='<span class="amenities-walk-time"><strong>'.esc_html($destination[1]).'</strong><span>phút đi bộ</span></span><p class="amenities-walk-destination">'.esc_html($destination[2]).'</p>';
+            $content='<p class="amenities-walk-destination">'.esc_html($destination[2]).'</p><span class="amenities-walk-time"><strong>'.esc_html($destination[1]).'</strong><span>phút đi bộ</span></span>';
         }
         return '<li'.$match[1].'><div class="amenities-walk-copy">'.$content.'</div>'.$photo.'</li>';
     },$html);

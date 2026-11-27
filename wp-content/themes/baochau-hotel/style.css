@@ -132,11 +132,11 @@ input[type=checkbox]{width:24px;height:24px;vertical-align:middle;margin:0 10px 
 .amenities-walk-time{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px;color:var(--gold-text)}
 .amenities-walk-time strong{font-size:42px;font-weight:500;line-height:1.1;letter-spacing:-2px;font-variant-numeric:tabular-nums}
 .amenities-walk-time>span{font-size:13px;letter-spacing:.3px}
-.amenities-walk .amenities-walk-destination{margin:14px 0 0;color:var(--ink);font-size:19px;font-weight:600;line-height:1.5}
+.amenities-walk .amenities-walk-destination{margin:0 0 14px;color:var(--ink);font-size:19px;font-weight:600;line-height:1.5}
 .amenities-walk-copy>:first-child{margin-top:0}
 .amenities-walk-copy>:last-child{margin-bottom:0}
 @media(max-width:980px){.amenities-walk ul,.amenities-walk ol{grid-template-columns:minmax(0,1fr)}.amenities-walk li{grid-template-columns:minmax(0,1fr) 200px;min-height:160px}.amenities-walk li>img{min-height:160px;max-height:200px}}
-@media(max-width:680px){.amenities-walk ul,.amenities-walk ol{gap:14px}.amenities-walk li{grid-template-columns:minmax(0,1fr) 38%;min-height:150px}.amenities-walk li>img{min-height:150px}.amenities-walk-copy{padding:20px}.amenities-walk-time strong{font-size:36px}.amenities-walk .amenities-walk-destination{font-size:17px;margin-top:10px}}
+@media(max-width:680px){.amenities-walk ul,.amenities-walk ol{gap:14px}.amenities-walk li{grid-template-columns:minmax(0,1fr) 38%;min-height:150px}.amenities-walk li>img{min-height:150px}.amenities-walk-copy{padding:20px}.amenities-walk-time strong{font-size:36px}.amenities-walk .amenities-walk-destination{font-size:17px;margin-bottom:10px}}
 .page-room-list{margin:36px 0}.page-room-list h2{font-size:28px}
 .content-page .reservation-aside h2{font-size:30px}
 .nav a[aria-current=page]{color:var(--gold-text);text-decoration:underline;text-underline-offset:8px}
