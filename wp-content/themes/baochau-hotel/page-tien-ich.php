@@ -9,11 +9,17 @@ $amenity_icons = [
     6 => '<circle cx="14" cy="4" r="2"/><path d="m7 12 3-4 4 1 3 4h3M13 10l-2 6-5 5M11 16l5 5M5 8h3M3 5h5"/>',
 ];
 ?>
-<main id="main" class="wrap page-main content-page"><?php while (have_posts()): the_post(); bch_page_heading('TẬN HƯỞNG KỲ NGHỈ'); ?><?php ob_start(); bch_page_content(); $amenities_body=ob_get_clean(); if (trim($amenities_body)): ?><div class="amenities-page-content editor-content"><?php echo $amenities_body; ?></div><?php endif; ?>
+<main id="main" class="wrap page-main content-page"><?php while (have_posts()): the_post(); bch_page_heading('TẬN HƯỞNG KỲ NGHỈ'); ?><?php
+ob_start(); bch_page_content();
+[$amenities_body,$walk_content]=bch_split_amenities_walk(ob_get_clean());
+$walk_card=bch_amenities_walk_card(get_the_ID());
+if ($walk_card) $walk_content=$walk_card;
+if (trim($amenities_body)): ?><div class="amenities-page-content editor-content"><?php echo $amenities_body; ?></div><?php endif; ?>
 <div class="acf-service-grid">
 <?php for ($i=1;$i<=6;$i++):
     $title=bch_field('bch_service_'.$i.'_title');
     if (!$title) continue;
+    if (sanitize_title($title)==='dao-bo-kham-pha-pho-thi') continue;
     $items=array_filter(array_map('trim',preg_split('/\R/u',(string)bch_field('bch_service_'.$i.'_text'))));
 ?>
 <article class="acf-service-card">
@@ -23,5 +29,6 @@ $amenity_icons = [
 </div></article>
 <?php endfor; ?>
 </div>
+<?php if ($walk_content): ?><section class="amenities-walk editor-content" aria-label="Dạo bộ khám phá phố thị"><?php echo bch_amenities_walk_images($walk_content,get_the_ID()); ?></section><?php endif; ?>
 <?php get_template_part('template-parts/location'); ?>
 <?php bch_page_demo_note(); endwhile; ?><a class="button" href="<?php echo esc_url(bch_page_url('lien-he')); ?>">Liên hệ để được tư vấn</a></main><?php get_footer(); ?>

@@ -69,6 +69,20 @@ function bch_acf_groups() {
         $f('bch_service_travel_tab','Vị trí & di chuyển','tab'),
         $f('bch_airport_distance','Khoảng cách đến sân bay','text',['default_value'=>'Cách sân bay Điện Biên khoảng 10 km.','instructions'=>'Cập nhật khoảng cách đường bộ thực tế khi đã xác nhận.']),
     ];
+    $amenities_page=get_page_by_path('tien-ich');
+    if ($amenities_page) {
+        $body=metadata_exists('post',$amenities_page->ID,'bch_page_body')?get_post_meta($amenities_page->ID,'bch_page_body',true):$amenities_page->post_content;
+        [, $walk]=bch_split_amenities_walk($body);
+        $walk_card=bch_amenities_walk_card($amenities_page->ID);
+        if ($walk_card) $walk=$walk_card;
+        $walk_items=bch_amenities_walk_items($walk);
+        if ($walk_items) $services[]=$f('bch_walk_tab','Dạo bộ khám phá phố thị','tab');
+        foreach ($walk_items as $index=>$item) {
+            $services[]=$f('bch_walk_image_'.($index+1),'Ảnh mục '.($index+1),'image',[
+                'instructions'=>wp_strip_all_tags($item).' — Ảnh theo thứ tự gạch đầu dòng trong nội dung. Nếu đổi thứ tự các mục, hãy đổi lại ảnh tương ứng. Lưu nội dung để cập nhật số ô ảnh.',
+            ]);
+        }
+    }
     for ($i=1;$i<=6;$i++) {
         $services[]=$f('bch_service_tab_'.$i,'Tiện ích '.$i,'tab');
         $services[]=$f('bch_service_'.$i.'_title','Tên tiện ích '.$i,'text',['instructions'=>'Để trống để ẩn thẻ tiện ích này.']);
