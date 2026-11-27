@@ -51,6 +51,6 @@ function bch_amenities_walk_images($html,$post_id) {
         ]):'';
         // Existing inline photos stay attached to their item until replaced in the controls.
         $content=$photo?preg_replace('/<img\b[^>]*>/is','',$match[2]):$match[2];
-        return '<li'.$match[1].'>'.$photo.'<div class="amenities-walk-copy">'.$content.'</div></li>';
+        return '<li'.$match[1].'><div class="amenities-walk-copy">'.$content.'</div>'.$photo.'</li>';
     },$html);
 }
