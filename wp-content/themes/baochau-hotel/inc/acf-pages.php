@@ -68,6 +68,10 @@ function bch_acf_groups() {
     $services=[
         $f('bch_service_travel_tab','Vị trí & di chuyển','tab'),
         $f('bch_airport_distance','Khoảng cách đến sân bay','text',['default_value'=>'Cách sân bay Điện Biên khoảng 10 km.','instructions'=>'Cập nhật khoảng cách đường bộ thực tế khi đã xác nhận.']),
+        $f('bch_walk_tab','Dạo bộ khám phá phố thị','tab'),
+        $f('bch_service_6_title','Tiêu đề khối dạo bộ'),
+        $f('bch_service_6_text','Các điểm đến','textarea',['instructions'=>'Mỗi dòng là một điểm đến. Ảnh bên dưới theo cùng thứ tự. Lưu trang sau khi thêm hoặc bớt điểm đến để cập nhật các ô ảnh.']),
+        $f('bch_service_6_image','Ảnh đầu khối dạo bộ','image'),
     ];
     $amenities_page=get_page_by_path('tien-ich');
     if ($amenities_page) {
@@ -76,20 +80,19 @@ function bch_acf_groups() {
         $walk_card=bch_amenities_walk_card($amenities_page->ID);
         if ($walk_card) $walk=$walk_card;
         $walk_items=bch_amenities_walk_items($walk);
-        if ($walk_items) $services[]=$f('bch_walk_tab','Dạo bộ khám phá phố thị','tab');
         foreach ($walk_items as $index=>$item) {
             $services[]=$f('bch_walk_image_'.($index+1),'Ảnh mục '.($index+1),'image',[
                 'instructions'=>wp_strip_all_tags($item).' — Ảnh theo thứ tự gạch đầu dòng trong nội dung. Nếu đổi thứ tự các mục, hãy đổi lại ảnh tương ứng. Lưu nội dung để cập nhật số ô ảnh.',
             ]);
         }
     }
-    for ($i=1;$i<=6;$i++) {
+    for ($i=1;$i<=5;$i++) {
         $services[]=$f('bch_service_tab_'.$i,'Tiện ích '.$i,'tab');
         $services[]=$f('bch_service_'.$i.'_title','Tên tiện ích '.$i,'text',['instructions'=>'Để trống để ẩn thẻ tiện ích này.']);
         $services[]=$f('bch_service_'.$i.'_text','Mô tả','textarea');
         $services[]=$f('bch_service_'.$i.'_image','Ảnh tiện ích','image');
     }
-    $groups[]=['key'=>'group_bch_services','title'=>'Bảo Châu — 6 thẻ tiện ích (ACF miễn phí)','fields'=>$services,'location'=>[[['param'=>'page_template','operator'=>'==','value'=>'page-tien-ich.php']]]];
+    $groups[]=['key'=>'group_bch_services','title'=>'Bảo Châu — Tiện ích & dạo bộ','fields'=>$services,'location'=>[[['param'=>'page_template','operator'=>'==','value'=>'page-tien-ich.php']]]];
     $groups[]=['key'=>'group_bch_contact','title'=>'Bảo Châu — Thông tin liên hệ','fields'=>[
         $f('bch_contact_address','Địa chỉ','textarea'),$f('bch_contact_phone','Điện thoại lễ tân','textarea',['instructions'=>'Mỗi số một dòng hoặc ngăn cách bằng dấu chấm phẩy.']),
         $f('bch_contact_email','Email','email'),$f('bch_contact_map','Liên kết Google Maps','url'),

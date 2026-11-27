@@ -6,7 +6,6 @@ $amenity_icons = [
     3 => '<rect x="3" y="9" width="18" height="12" rx="2"/><path d="M9 23h6M12 21v2M6 4a10 10 0 0 1 12 0M9 6a5 5 0 0 1 6 0"/><circle cx="12" cy="8" r=".5"/>',
     4 => '<path d="M5 21V7a4 4 0 0 1 8 0M10 10h6a3 3 0 0 0-6 0ZM10 14v1M13 14v1M16 14v1M10 18v1M13 18v1M16 18v1M3 21h5"/>',
     5 => '<path d="M4 14v-3a8 8 0 0 1 16 0v3M4 12H3v6h4v-6H4ZM20 12h1v6h-4v-6h3ZM20 18v1a3 3 0 0 1-3 3h-5"/><path d="M10 21h4"/>',
-    6 => '<circle cx="14" cy="4" r="2"/><path d="m7 12 3-4 4 1 3 4h3M13 10l-2 6-5 5M11 16l5 5M5 8h3M3 5h5"/>',
 ];
 ?>
 <main id="main" class="wrap page-main content-page"><?php while (have_posts()): the_post(); bch_page_heading('TẬN HƯỞNG KỲ NGHỈ'); ?><?php
@@ -16,7 +15,7 @@ $walk_card=bch_amenities_walk_card(get_the_ID());
 if ($walk_card) $walk_content=$walk_card;
 if (trim($amenities_body)): ?><div class="amenities-page-content editor-content"><?php echo $amenities_body; ?></div><?php endif; ?>
 <div class="acf-service-grid">
-<?php for ($i=1;$i<=6;$i++):
+<?php for ($i=1;$i<=5;$i++):
     $title=bch_field('bch_service_'.$i.'_title');
     if (!$title) continue;
     if (sanitize_title($title)==='dao-bo-kham-pha-pho-thi') continue;
